@@ -1,0 +1,105 @@
+﻿@model MiCholoMVC.Models.Caja
+
+@{
+    ViewData["Title"] = "Cerrar Caja";
+
+    decimal saldoFinal = ViewBag.SaldoFinal ?? 0;
+}
+
+<div class="container mt-4">
+
+    <div class="row justify-content-center">
+
+        <div class="col-md-7">
+
+            <div class="card">
+
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        Cerrar Caja
+                    </h4>
+                </div>
+
+                <div class="card-body">
+
+                    <h5>
+                        @Model.Nombre
+                    </h5>
+
+                    <hr />
+
+                    <div class="mb-3">
+
+                        <strong>
+                            Estado actual:
+                        </strong>
+
+                        <span class="badge bg-success">
+                            @Model.Estado
+                        </span>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <strong>
+                            Monto inicial:
+                        </strong>
+
+                        <span>
+                            S/ @Model.MontoInicial.ToString("F2")
+                        </span>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <strong>
+                            Monto de cierre:
+                        </strong>
+
+                        <span>
+                            S/ @saldoFinal.ToString("F2")
+                        </span>
+
+                    </div>
+
+                    <div class="alert alert-warning">
+
+                        <strong>Atención:</strong>
+
+                        Al cerrar la caja ya no se podrán registrar
+                        nuevos movimientos en ella.
+
+                    </div>
+
+                    <form asp-action="CerrarPost"
+                          method="post">
+
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden"
+                               name="id"
+                               value="@Model.IdCaja" />
+
+                        <button type="submit"
+                                class="btn btn-danger">
+                            Confirmar cierre
+                        </button>
+
+                        <a asp-action="Index"
+                           class="btn btn-secondary">
+                            Cancelar
+                        </a>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

@@ -1,0 +1,63 @@
+﻿@model MiCholoMVC.Models.Categoria
+
+@{
+    ViewData["Title"] = "Nueva Categoría";
+}
+
+<div class="container mt-4">
+
+    <h2>Nueva Categoría</h2>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+
+            <form asp-action="Create" method="post">
+
+                <div asp-validation-summary="ModelOnly"
+                     class="text-danger"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Nombre" class="form-label">
+                        Nombre
+                    </label>
+
+                    <input asp-for="Nombre"
+                           class="form-control" />
+
+                    <span asp-validation-for="Nombre"
+                          class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Descripcion"
+                           class="form-label">
+                        Descripción
+                    </label>
+
+                    <textarea asp-for="Descripcion"
+                              class="form-control"></textarea>
+                </div>
+
+                <button type="submit"
+                        class="btn btn-success">
+                    Guardar
+                </button>
+
+                <a asp-action="Index"
+                   class="btn btn-secondary">
+                    Cancelar
+                </a>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync(
+            "_ValidationScriptsPartial");
+    }
+}

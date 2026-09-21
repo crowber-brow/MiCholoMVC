@@ -1,0 +1,179 @@
+html {
+    font-size: 14px;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    margin: 0;
+    background-color: #f5f6fa;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+
+/* ============================= */
+/* MENÚ LATERAL */
+/* ============================= */
+
+.sidebar {
+    width: 250px;
+    min-width: 250px;
+    min-height: 100vh;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 18px;
+}
+
+    .sidebar-header h4 {
+        font-weight: 700;
+    }
+
+    .sidebar-header small {
+        color: #adb5bd;
+    }
+
+.logo-container {
+    width: 45px;
+    height: 45px;
+    border-radius: 10px;
+    background-color: #ffffff;
+    color: #212529;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+}
+
+.sidebar .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 18px;
+    margin: 2px 10px;
+    border-radius: 7px;
+    transition: 0.2s;
+    font-size: 15px;
+}
+
+    .sidebar .nav-link i {
+        width: 20px;
+        font-size: 16px;
+    }
+
+    .sidebar .nav-link:hover {
+        background-color: rgba(255, 255, 255, 0.12);
+        color: white !important;
+        transform: translateX(2px);
+    }
+
+.menu-section {
+    font-size: 11px;
+    font-weight: bold;
+    color: #adb5bd;
+    letter-spacing: 1px;
+    padding: 20px 18px 7px 18px;
+}
+
+
+/* ============================= */
+/* CONTENIDO */
+/* ============================= */
+
+.main-content {
+    min-width: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.topbar {
+    min-height: 65px;
+    display: flex;
+    align-items: center;
+}
+
+    .topbar h5 {
+        font-weight: 600;
+        color: #343a40;
+    }
+
+
+/* ============================= */
+/* TARJETAS */
+/* ============================= */
+
+.card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.card-header {
+    font-weight: 600;
+}
+
+
+/* ============================= */
+/* TABLAS */
+/* ============================= */
+
+.table {
+    vertical-align: middle;
+}
+
+    .table thead th {
+        white-space: nowrap;
+    }
+
+
+/* ============================= */
+/* BOTONES */
+/* ============================= */
+
+.btn {
+    border-radius: 7px;
+}
+
+
+/* ============================= */
+/* RESPONSIVE */
+/* ============================= */
+
+@media (max-width: 768px) {
+
+    .sidebar {
+        width: 210px;
+        min-width: 210px;
+    }
+
+    .sidebar-header {
+        padding: 15px 10px;
+    }
+
+    .sidebar .nav-link {
+        margin: 2px 5px;
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    .menu-section {
+        padding-left: 10px;
+    }
+}

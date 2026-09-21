@@ -1,0 +1,103 @@
+﻿@model IEnumerable<MiCholoMVC.Models.Proveedor>
+
+@{
+    ViewData["Title"] = "Proveedores";
+}
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+
+        <h2>Proveedores</h2>
+
+        <a asp-action="Create" class="btn btn-primary">
+            + Nuevo proveedor
+        </a>
+
+    </div>
+
+    <div class="card shadow-sm">
+
+        <div class="card-body">
+
+            <table class="table table-striped table-hover">
+
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Razón Social</th>
+                        <th>RUC</th>
+                        <th>Teléfono</th>
+                        <th>Dirección</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+
+                            <td>
+                                @item.IdProveedor
+                            </td>
+
+                            <td>
+                                @item.RazonSocial
+                            </td>
+
+                            <td>
+                                @item.Ruc
+                            </td>
+
+                            <td>
+                                @item.Telefono
+                            </td>
+
+                            <td>
+                                @item.Direccion
+                            </td>
+
+                            <td>
+
+                                @if (item.Estado)
+                                {
+                                    <span class="badge bg-success">
+                                        Activo
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        Inactivo
+                                    </span>
+                                }
+
+                            </td>
+
+                            <td>
+
+                                <a asp-action="Edit"
+                                   asp-route-id="@item.IdProveedor"
+                                   class="btn btn-sm btn-warning">
+
+                                    Editar
+
+                                </a>
+
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>

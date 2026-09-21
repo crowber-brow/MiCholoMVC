@@ -1,0 +1,220 @@
+﻿@model List<MiCholoMVC.Models.Caja>
+
+@{
+    ViewData["Title"] = "Cajas";
+
+    var saldos = ViewBag.Saldos as Dictionary<int, decimal>
+                  ?? new Dictionary<int, decimal>();
+}
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h2>Gestión de Cajas</h2>
+
+            <p class="text-muted mb-0">
+                Administración de cajas y movimientos de efectivo.
+            </p>
+        </div>
+
+        <a asp-action="Abrir"
+           class="btn btn-primary">
+            + Abrir caja
+        </a>
+
+    </div>
+
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    @if (TempData["Mensaje"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Mensaje"]
+        </div>
+    }
+
+    @if (Model.Count == 0)
+    {
+        <div class="alert alert-info">
+            No existen cajas registradas.
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+
+            <table class="table table-bordered table-striped align-middle">
+
+                <thead class="table-dark">
+
+                    <tr>
+
+                        <th>
+                            ID
+                        </th>
+
+                        <th>
+                            Nombre
+                        </th>
+
+                        <th>
+                            Estado
+                        </th>
+
+                        <th>
+                            Monto inicial
+                        </th>
+
+                        <th>
+                            Saldo actual
+                        </th>
+
+                        <th>
+                            Fecha apertura
+                        </th>
+
+                        <th>
+                            Fecha cierre
+                        </th>
+
+                        <th>
+                            Monto cierre
+                        </th>
+
+                        <th>
+                            Acciones
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    @foreach (var caja in Model)
+                    {
+                        decimal saldo = 0;
+
+                        if (saldos.ContainsKey(caja.IdCaja))
+                        {
+                            saldo = saldos[caja.IdCaja];
+                        }
+
+                        <tr>
+
+                            <td>
+                                @caja.IdCaja
+                            </td>
+
+                            <td>
+                                @caja.Nombre
+                            </td>
+
+                            <td>
+
+                                @if (caja.Estado == "ABIERTA")
+                                {
+                                    <span class="badge bg-success">
+                                        ABIERTA
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        CERRADA
+                                    </span>
+                                }
+
+                            </td>
+
+                            <td>
+                                S/ @caja.MontoInicial.ToString("F2")
+                            </td>
+
+                            <td>
+                                <strong>
+                                    S/ @saldo.ToString("F2")
+                                </strong>
+                            </td>
+
+                            <td>
+                                @if (caja.FechaApertura.HasValue)
+                                {
+                                    @caja.FechaApertura.Value.ToString("dd/MM/yyyy HH:mm")
+                                }
+                                else
+                                {
+                                    <span>-</span>
+                                }
+                            </td>
+
+                            <td>
+                                @if (caja.FechaCierre.HasValue)
+                                {
+                                    @caja.FechaCierre.Value.ToString("dd/MM/yyyy HH:mm")
+                                }
+                                else
+                                {
+                                    <span>-</span>
+                                }
+                            </td>
+
+                            <td>
+                                @if (caja.MontoCierre.HasValue)
+                                {
+                                    @($"S/ {caja.MontoCierre.Value:F2}")
+                                }
+                                else
+                                {
+                                    <span>-</span>
+                                }
+                            </td>
+
+                            <td>
+
+                                <div class="d-flex gap-2">
+
+                                    <a asp-action="Movimientos"
+                                       asp-route-id="@caja.IdCaja"
+                                       class="btn btn-info btn-sm">
+                                        Movimientos
+                                    </a>
+
+                                    @if (caja.Estado == "ABIERTA")
+                                    {
+                                        <a asp-action="Movimiento"
+                                           asp-route-id="@caja.IdCaja"
+                                           class="btn btn-success btn-sm">
+                                            + Movimiento
+                                        </a>
+
+                                        <a asp-action="Cerrar"
+                                           asp-route-id="@caja.IdCaja"
+                                           class="btn btn-danger btn-sm">
+                                            Cerrar caja
+                                        </a>
+                                    }
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+    }
+
+</div>

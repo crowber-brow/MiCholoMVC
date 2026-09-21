@@ -1,0 +1,219 @@
+﻿@model MiCholoMVC.Models.Producto
+
+@{
+    ViewData["Title"] = "Nuevo Producto";
+}
+
+<div class="container mt-4">
+
+    <h2>Nuevo Producto</h2>
+
+    <div class="card shadow-sm">
+
+        <div class="card-body">
+
+            <form asp-action="Create" method="post">
+
+                <div asp-validation-summary="ModelOnly"
+                     class="text-danger mb-3">
+                </div>
+
+                <div class="mb-3">
+
+                    <label asp-for="Nombre"
+                           class="form-label">
+
+                        Nombre
+
+                    </label>
+
+                    <input asp-for="Nombre"
+                           class="form-control" />
+
+                    <span asp-validation-for="Nombre"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label asp-for="Descripcion"
+                           class="form-label">
+
+                        Descripción
+
+                    </label>
+
+                    <textarea asp-for="Descripcion"
+                              class="form-control">
+                    </textarea>
+
+                    <span asp-validation-for="Descripcion"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label asp-for="IdCategoria"
+                           class="form-label">
+
+                        Categoría
+
+                    </label>
+
+                    <select asp-for="IdCategoria"
+                            asp-items="ViewBag.Categorias"
+                            class="form-select">
+
+                        <option value="">
+                            -- Seleccione una categoría --
+                        </option>
+
+                    </select>
+
+                    <span asp-validation-for="IdCategoria"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label asp-for="IdProveedor"
+                           class="form-label">
+
+                        Proveedor
+
+                    </label>
+
+                    <select asp-for="IdProveedor"
+                            asp-items="ViewBag.Proveedores"
+                            class="form-select">
+
+                        <option value="">
+                            -- Sin proveedor --
+                        </option>
+
+                    </select>
+
+                    <span asp-validation-for="IdProveedor"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-4 mb-3">
+
+                        <label asp-for="PrecioCompra"
+                               class="form-label">
+
+                            Precio de compra
+
+                        </label>
+
+                        <div class="input-group">
+
+                            <span class="input-group-text">
+                                S/
+                            </span>
+
+                            <input asp-for="PrecioCompra"
+                                   class="form-control"
+                                   type="number"
+                                   step="0.01"
+                                   min="0.01" />
+
+                        </div>
+
+                        <span asp-validation-for="PrecioCompra"
+                              class="text-danger">
+                        </span>
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label asp-for="PrecioVenta"
+                               class="form-label">
+
+                            Precio de venta
+
+                        </label>
+
+                        <div class="input-group">
+
+                            <span class="input-group-text">
+                                S/
+                            </span>
+
+                            <input asp-for="PrecioVenta"
+                                   class="form-control"
+                                   type="number"
+                                   step="0.01"
+                                   min="0.01" />
+
+                        </div>
+
+                        <span asp-validation-for="PrecioVenta"
+                              class="text-danger">
+                        </span>
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label asp-for="StockMinimo"
+                               class="form-label">
+
+                            Stock mínimo
+
+                        </label>
+
+                        <input asp-for="StockMinimo"
+                               class="form-control"
+                               type="number"
+                               min="0" />
+
+                        <span asp-validation-for="StockMinimo"
+                              class="text-danger">
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <button type="submit"
+                        class="btn btn-success">
+
+                    Guardar
+
+                </button>
+
+                <a asp-action="Index"
+                   class="btn btn-secondary">
+
+                    Cancelar
+
+                </a>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+@section Scripts {
+
+    @{
+        await Html.RenderPartialAsync(
+            "_ValidationScriptsPartial");
+    }
+
+}

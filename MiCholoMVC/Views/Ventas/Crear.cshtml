@@ -1,0 +1,604 @@
+﻿@model MiCholoMVC.ViewModels.VentaCreateViewModel
+
+@{
+    ViewData["Title"] = "Nueva Venta";
+    var caja = ViewBag.Caja as MiCholoMVC.Models.Caja;
+    var lotes = ViewBag.Lotes as List<MiCholoMVC.Models.Lote>;
+}
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h2>Nueva Venta</h2>
+            <p class="text-muted">
+                Registre los productos vendidos.
+            </p>
+        </div>
+
+        <a asp-action="Index" class="btn btn-secondary">
+            Volver
+        </a>
+
+    </div>
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger">
+
+            <strong>Revise los siguientes errores:</strong>
+
+            <ul class="mb-0">
+
+                @foreach (var error in ViewData.ModelState.Values
+                    .SelectMany(v => v.Errors))
+                {
+                    <li>@error.ErrorMessage</li>
+                }
+
+            </ul>
+
+        </div>
+    }
+
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header">
+            <strong>Información de la caja</strong>
+        </div>
+
+        <div class="card-body">
+
+            @if (caja != null)
+            {
+                <div class="row">
+
+                    <div class="col-md-4">
+                        <strong>Caja:</strong>
+                        @caja.Nombre
+                    </div>
+
+                    <div class="col-md-4">
+                        <strong>Estado:</strong>
+                        <span class="badge bg-success">
+                            @caja.Estado
+                        </span>
+                    </div>
+
+                    <div class="col-md-4">
+                        <strong>Monto inicial:</strong>
+                        S/ @caja.MontoInicial.ToString("F2")
+                    </div>
+
+                </div>
+            }
+
+        </div>
+
+    </div>
+
+    <form asp-action="Crear" method="post">
+
+        @Html.AntiForgeryToken()
+
+        <div class="card shadow-sm mb-4">
+
+            <div class="card-header">
+                <strong>Datos de la venta</strong>
+            </div>
+
+            <div class="card-body">
+
+                <div class="row">
+
+                    <div class="col-md-4">
+
+                        <label asp-for="MetodoPago"
+                               class="form-label">
+                            Método de pago
+                        </label>
+
+                        <select asp-for="MetodoPago"
+                                class="form-select">
+
+                            <option value="">
+                                -- Seleccione --
+                            </option>
+
+                            <option value="EFECTIVO">
+                                EFECTIVO
+                            </option>
+
+                            <option value="YAPE">
+                                YAPE
+                            </option>
+
+                            <option value="PLIN">
+                                PLIN
+                            </option>
+
+                            <option value="TARJETA">
+                                TARJETA
+                            </option>
+
+                        </select>
+
+                        <span asp-validation-for="MetodoPago"
+                              class="text-danger">
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="card shadow-sm mb-4">
+
+            <div class="card-header d-flex justify-content-between align-items-center">
+
+                <strong>Productos de la venta</strong>
+
+                <button type="button"
+                        id="btnAgregar"
+                        class="btn btn-success btn-sm">
+                    + Agregar producto
+                </button>
+
+            </div>
+
+            <div class="card-body">
+
+                <div class="table-responsive">
+
+                    <table class="table table-bordered align-middle"
+                           id="tablaDetalles">
+
+                        <thead class="table-dark">
+
+                            <tr>
+
+                                <th style="width: 30%;">
+                                    Producto / Lote
+                                </th>
+
+                                <th>
+                                    Vencimiento
+                                </th>
+
+                                <th>
+                                    Stock
+                                </th>
+
+                                <th>
+                                    Precio
+                                </th>
+
+                                <th>
+                                    Cantidad
+                                </th>
+
+                                <th>
+                                    Subtotal
+                                </th>
+
+                                <th>
+                                    Acción
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="detalleBody">
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+                <div id="mensajeDetalles"
+                     class="alert alert-info">
+                    Agregue al menos un producto.
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="card shadow-sm mb-4">
+
+            <div class="card-body">
+
+                <div class="row justify-content-end">
+
+                    <div class="col-md-4">
+
+                        <div class="d-flex justify-content-between">
+
+                            <strong>Total:</strong>
+
+                            <strong id="totalVenta">
+                                S/ 0.00
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="d-flex justify-content-end gap-2">
+
+            <a asp-action="Index"
+               class="btn btn-secondary">
+                Cancelar
+            </a>
+
+            <button type="submit"
+                    class="btn btn-primary">
+                Registrar venta
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+@section Scripts {
+
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+
+        const lotes = [
+            @if (lotes != null)
+            {
+                    foreach (var lote in lotes)
+                    {
+                            <text>
+                                {
+                                    idLote: @lote.IdLote,
+                                    producto: "@Html.Raw(lote.Producto.Nombre.Replace("\"", "\\\""))",
+                                    numeroLote: "@Html.Raw(lote.NumeroLote.Replace("\"", "\\\""))",
+                                    stock: @lote.Cantidad,
+                                    precio: @lote.Producto.PrecioVenta.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                                    fechaVencimiento: "@lote.FechaVencimiento.ToString("yyyy-MM-dd")"
+                                },
+                            </text>
+                    }
+            }
+        ];
+
+        let contador = 0;
+
+        function formatoMoneda(valor) {
+            return "S/ " + Number(valor).toFixed(2);
+        }
+
+        function calcularTotal() {
+
+            let total = 0;
+
+            document
+                .querySelectorAll(".cantidad")
+                .forEach(function (input) {
+
+                    const fila = input.closest("tr");
+
+                    const precio =
+                        Number(fila.querySelector(".precio").value);
+
+                    const cantidad =
+                        Number(input.value);
+
+                    const subtotal =
+                        precio * cantidad;
+
+                    fila.querySelector(".subtotal").textContent =
+                        formatoMoneda(subtotal);
+
+                    total += subtotal;
+                });
+
+            document.getElementById("totalVenta")
+                .textContent = formatoMoneda(total);
+        }
+
+        function crearOpciones() {
+
+            let opciones =
+                '<option value="">-- Seleccione lote --</option>';
+
+            lotes.forEach(function (lote) {
+
+                opciones +=
+                    '<option value="' +
+                    lote.idLote +
+                    '">' +
+                    lote.producto +
+                    ' | Lote: ' +
+                    lote.numeroLote +
+                    ' | Stock: ' +
+                    lote.stock +
+                    ' | S/ ' +
+                    Number(lote.precio).toFixed(2) +
+                    '</option>';
+            });
+
+            return opciones;
+        }
+
+        function agregarFila() {
+
+            const tbody =
+                document.getElementById("detalleBody");
+
+            const fila =
+                document.createElement("tr");
+
+            fila.innerHTML = `
+
+                <td>
+
+                    <select
+                        name="Detalles[${contador}].IdLote"
+                        class="form-select lote-select"
+                        required>
+
+                        ${crearOpciones()}
+
+                    </select>
+
+                </td>
+
+                <td>
+                    <span class="vencimiento">
+                        -
+                    </span>
+                </td>
+
+                <td>
+                    <span class="stock">
+                        -
+                    </span>
+                </td>
+
+                <td>
+
+                    <input
+                        type="hidden"
+                        name="Detalles[${contador}].PrecioUnitario"
+                        class="precio"
+                        value="0" />
+
+                    <span class="precioTexto">
+                        S/ 0.00
+                    </span>
+
+                </td>
+
+                <td>
+
+                    <input
+                        type="number"
+                        name="Detalles[${contador}].Cantidad"
+                        class="form-control cantidad"
+                        min="1"
+                        value="1"
+                        required />
+
+                </td>
+
+                <td>
+
+                    <span class="subtotal">
+                        S/ 0.00
+                    </span>
+
+                </td>
+
+                <td>
+
+                    <button
+                        type="button"
+                        class="btn btn-danger btn-sm btnEliminar">
+                        Eliminar
+                    </button>
+
+                </td>
+
+            `;
+
+            tbody.appendChild(fila);
+
+            const select =
+                fila.querySelector(".lote-select");
+
+            const cantidad =
+                fila.querySelector(".cantidad");
+
+            select.addEventListener(
+                "change",
+                function () {
+
+                    const idLote =
+                        Number(this.value);
+
+                    const lote =
+                        lotes.find(
+                            l => l.idLote === idLote
+                        );
+
+                    if (!lote) {
+
+                        fila.querySelector(".stock")
+                            .textContent = "-";
+
+                        fila.querySelector(".vencimiento")
+                            .textContent = "-";
+
+                        fila.querySelector(".precio")
+                            .value = "0";
+
+                        fila.querySelector(".precioTexto")
+                            .textContent = "S/ 0.00";
+
+                        calcularTotal();
+
+                        return;
+                    }
+
+                    fila.querySelector(".stock")
+                        .textContent = lote.stock;
+
+                    fila.querySelector(".vencimiento")
+                        .textContent =
+                        formatearFecha(lote.fechaVencimiento);
+
+                    fila.querySelector(".precio")
+                        .value = lote.precio;
+
+                    fila.querySelector(".precioTexto")
+                        .textContent =
+                        formatoMoneda(lote.precio);
+
+                    cantidad.max = lote.stock;
+
+                    if (Number(cantidad.value) > lote.stock) {
+                        cantidad.value = lote.stock;
+                    }
+
+                    calcularTotal();
+                }
+            );
+
+            cantidad.addEventListener(
+                "input",
+                function () {
+
+                    const idLote =
+                        Number(select.value);
+
+                    const lote =
+                        lotes.find(
+                            l => l.idLote === idLote
+                        );
+
+                    if (lote &&
+                        Number(this.value) > lote.stock) {
+
+                        this.value = lote.stock;
+                    }
+
+                    if (Number(this.value) < 1) {
+                        this.value = 1;
+                    }
+
+                    calcularTotal();
+                }
+            );
+
+            fila.querySelector(".btnEliminar")
+                .addEventListener(
+                    "click",
+                    function () {
+
+                        fila.remove();
+
+                        reindexarDetalles();
+
+                        calcularTotal();
+
+                        verificarFilas();
+                    }
+                );
+
+            contador++;
+
+            verificarFilas();
+        }
+
+        function reindexarDetalles() {
+
+            const filas =
+                document.querySelectorAll(
+                    "#detalleBody tr"
+                );
+
+            filas.forEach(
+                function (fila, index) {
+
+                    fila.querySelector(".lote-select")
+                        .name =
+                        `Detalles[${index}].IdLote`;
+
+                    fila.querySelector(".cantidad")
+                        .name =
+                        `Detalles[${index}].Cantidad`;
+
+                    fila.querySelector(".precio")
+                        .name =
+                        `Detalles[${index}].PrecioUnitario`;
+                }
+            );
+
+            contador = filas.length;
+        }
+
+        function verificarFilas() {
+
+            const filas =
+                document.querySelectorAll(
+                    "#detalleBody tr"
+                );
+
+            const mensaje =
+                document.getElementById(
+                    "mensajeDetalles"
+                );
+
+            if (filas.length === 0) {
+
+                mensaje.style.display = "block";
+
+            } else {
+
+                mensaje.style.display = "none";
+            }
+        }
+
+        function formatearFecha(fecha) {
+
+            const partes =
+                fecha.split("-");
+
+            return partes[2] +
+                "/" +
+                partes[1] +
+                "/" +
+                partes[0];
+        }
+
+        document
+            .getElementById("btnAgregar")
+            .addEventListener(
+                "click",
+                function () {
+
+                    agregarFila();
+                }
+            );
+
+        verificarFilas();
+
+    </script>
+}

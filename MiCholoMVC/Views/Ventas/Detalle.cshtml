@@ -1,0 +1,211 @@
+﻿@model MiCholoMVC.Models.Venta
+
+@{
+    ViewData["Title"] = "Detalle de Venta";
+
+    var detalles = ViewBag.Detalles;
+}
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h2>Detalle de Venta #@Model.IdVenta</h2>
+
+            <p class="text-muted">
+                Información completa de la venta registrada.
+            </p>
+        </div>
+
+        <a asp-action="Index"
+           class="btn btn-secondary">
+            Volver
+        </a>
+
+    </div>
+
+    <div class="alert alert-success">
+        La venta fue registrada correctamente.
+    </div>
+
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header">
+            <strong>Información de la venta</strong>
+        </div>
+
+        <div class="card-body">
+
+            <div class="row">
+
+                <div class="col-md-3">
+
+                    <strong>N° Venta</strong>
+
+                    <p>
+                        @Model.IdVenta
+                    </p>
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <strong>Fecha</strong>
+
+                    <p>
+                        @Model.Fecha.ToString("dd/MM/yyyy HH:mm")
+                    </p>
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <strong>Caja</strong>
+
+                    <p>
+                        @(Model.Caja?.Nombre ?? "Sin caja")
+                    </p>
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <strong>Método de pago</strong>
+
+                    <p>
+                        <span class="badge bg-primary">
+                            @Model.MetodoPago
+                        </span>
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header">
+            <strong>Productos vendidos</strong>
+        </div>
+
+        <div class="card-body">
+
+            <div class="table-responsive">
+
+                <table class="table table-bordered table-hover">
+
+                    <thead class="table-dark">
+
+                        <tr>
+
+                            <th>
+                                Producto
+                            </th>
+
+                            <th>
+                                Lote
+                            </th>
+
+                            <th>
+                                Vencimiento
+                            </th>
+
+                            <th>
+                                Cantidad
+                            </th>
+
+                            <th>
+                                Precio unitario
+                            </th>
+
+                            <th>
+                                Subtotal
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var detalle in detalles)
+                        {
+                            <tr>
+
+                                <td>
+                                    @detalle.Producto
+                                </td>
+
+                                <td>
+                                    @detalle.NumeroLote
+                                </td>
+
+                                <td>
+                                    @detalle.FechaVencimiento.ToString("dd/MM/yyyy")
+                                </td>
+
+                                <td>
+                                    @detalle.Cantidad
+                                </td>
+
+                                <td>
+                                    S/ @detalle.PrecioUnitario.ToString("F2")
+                                </td>
+
+                                <td>
+                                    <strong>
+                                        S/ @detalle.Subtotal.ToString("F2")
+                                    </strong>
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="row justify-content-end">
+
+        <div class="col-md-4">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between">
+
+                        <span>
+                            <strong>Total de venta:</strong>
+                        </span>
+
+                        <span class="fs-4">
+
+                            <strong>
+                                S/ @Model.Total.ToString("F2")
+                            </strong>
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

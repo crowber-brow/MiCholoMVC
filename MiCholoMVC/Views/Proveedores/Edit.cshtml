@@ -1,0 +1,131 @@
+﻿@model MiCholoMVC.Models.Proveedor
+
+@{
+    ViewData["Title"] = "Editar Proveedor";
+}
+
+<div class="container mt-4">
+
+    <h2>Editar Proveedor</h2>
+
+    <div class="card shadow-sm">
+
+        <div class="card-body">
+
+            <form asp-action="Edit" method="post">
+
+                <input type="hidden"
+                       asp-for="IdProveedor" />
+
+                <div asp-validation-summary="ModelOnly"
+                     class="text-danger"></div>
+
+                <div class="mb-3">
+
+                    <label asp-for="RazonSocial"
+                           class="form-label">
+                        Razón Social
+                    </label>
+
+                    <input asp-for="RazonSocial"
+                           class="form-control" />
+
+                    <span asp-validation-for="RazonSocial"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label asp-for="Ruc"
+                           class="form-label">
+                        RUC
+                    </label>
+
+                    <input asp-for="Ruc"
+                           class="form-control"
+                           maxlength="11" />
+
+                    <span asp-validation-for="Ruc"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label asp-for="Telefono"
+                           class="form-label">
+                        Teléfono
+                    </label>
+
+                    <input asp-for="Telefono"
+                           class="form-control" />
+
+                    <span asp-validation-for="Telefono"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label asp-for="Direccion"
+                           class="form-label">
+                        Dirección
+                    </label>
+
+                    <input asp-for="Direccion"
+                           class="form-control" />
+
+                    <span asp-validation-for="Direccion"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+                <div class="form-check mb-3">
+
+                    <input asp-for="Estado"
+                           class="form-check-input" />
+
+                    <label asp-for="Estado"
+                           class="form-check-label">
+
+                        Activo
+
+                    </label>
+
+                </div>
+
+                <button type="submit"
+                        class="btn btn-primary">
+
+                    Guardar cambios
+
+                </button>
+
+                <a asp-action="Index"
+                   class="btn btn-secondary">
+
+                    Cancelar
+
+                </a>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+@section Scripts {
+
+    @{
+        await Html.RenderPartialAsync(
+            "_ValidationScriptsPartial");
+    }
+
+}

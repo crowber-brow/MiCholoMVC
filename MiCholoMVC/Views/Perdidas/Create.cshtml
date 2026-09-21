@@ -1,0 +1,219 @@
+﻿@model MiCholoMVC.ViewModels.PerdidaCreateViewModel
+
+@{
+    ViewData["Title"] = "Registrar Pérdida";
+}
+
+<div class="container mt-4">
+
+    <h2>Registrar Pérdida</h2>
+
+    <div class="card shadow-sm">
+
+        <div class="card-body">
+
+            <form asp-action="Create"
+                  method="post">
+
+                <div asp-validation-summary="ModelOnly"
+                     class="text-danger mb-3">
+                </div>
+
+                <div class="mb-3">
+
+                    <label asp-for="IdProducto"
+                           class="form-label">
+                        Producto
+                    </label>
+
+                    <select asp-for="IdProducto"
+                            asp-items="ViewBag.Productos"
+                            class="form-select"
+                            id="productoSelect">
+
+                        <option value="">
+                            -- Seleccione un producto --
+                        </option>
+
+                    </select>
+
+                    <span asp-validation-for="IdProducto"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label asp-for="IdLote"
+                           class="form-label">
+                        Lote
+                    </label>
+
+                    <select asp-for="IdLote"
+                            asp-items="ViewBag.Lotes"
+                            class="form-select"
+                            id="loteSelect">
+
+                        <option value="">
+                            -- Seleccione un lote --
+                        </option>
+
+                    </select>
+
+                    <span asp-validation-for="IdLote"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label asp-for="Cantidad"
+                           class="form-label">
+                        Cantidad perdida
+                    </label>
+
+                    <input asp-for="Cantidad"
+                           type="number"
+                           min="1"
+                           class="form-control" />
+
+                    <span asp-validation-for="Cantidad"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label asp-for="Motivo"
+                           class="form-label">
+                        Motivo
+                    </label>
+
+                    <select asp-for="Motivo"
+                            class="form-select">
+
+                        <option value="">
+                            -- Seleccione un motivo --
+                        </option>
+
+                        <option value="ROBO">
+                            ROBO
+                        </option>
+
+                        <option value="ROTURA">
+                            ROTURA
+                        </option>
+
+                        <option value="EXTRAVIO">
+                            EXTRAVÍO
+                        </option>
+
+                        <option value="DETERIORO">
+                            DETERIORO
+                        </option>
+
+                        <option value="MERMA">
+                            MERMA
+                        </option>
+
+                    </select>
+
+                    <span asp-validation-for="Motivo"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label asp-for="Justificacion"
+                           class="form-label">
+                        Justificación
+                    </label>
+
+                    <textarea asp-for="Justificacion"
+                              class="form-control"
+                              rows="4"
+                              maxlength="500"
+                              placeholder="Explique el motivo de la pérdida..."></textarea>
+
+                    <span asp-validation-for="Justificacion"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+                <button type="submit"
+                        class="btn btn-success">
+                    Registrar pérdida
+                </button>
+
+                <a asp-action="Index"
+                   class="btn btn-secondary">
+                    Cancelar
+                </a>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+@section Scripts {
+
+    @{
+        await Html.RenderPartialAsync(
+            "_ValidationScriptsPartial");
+    }
+
+    <script>
+
+        document
+            .getElementById("productoSelect")
+            .addEventListener("change", async function() {
+
+                const productoId = this.value;
+
+                const loteSelect =
+                    document.getElementById("loteSelect");
+
+                loteSelect.innerHTML =
+                    '<option value="">-- Seleccione un lote --</option>';
+
+                if (!productoId) {
+                    return;
+                }
+
+                const response = await fetch(
+                    `/Perdidas/ObtenerLotesPorProducto?idProducto=${productoId}`
+                );
+
+                if (!response.ok) {
+                    return;
+                }
+
+                const lotes = await response.json();
+
+                lotes.forEach(lote => {
+
+                    const option =
+                        document.createElement("option");
+
+                    option.value = lote.id;
+
+                    option.textContent =
+                        `${lote.numero} - Stock: ${lote.cantidad}`;
+
+                    loteSelect.appendChild(option);
+
+                });
+
+            });
+
+    </script>
+}

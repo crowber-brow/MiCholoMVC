@@ -1,0 +1,172 @@
+﻿@model MiCholoMVC.Models.Lote
+
+@{
+    ViewData["Title"] = "Editar Lote";
+}
+
+<div class="container mt-4">
+
+    <h2>Editar Lote</h2>
+
+    <div class="card shadow-sm">
+
+        <div class="card-body">
+
+            <form asp-action="Edit" method="post">
+
+                <input type="hidden"
+                       asp-for="IdLote" />
+
+                <div asp-validation-summary="ModelOnly"
+                     class="text-danger mb-3">
+                </div>
+
+                <div class="mb-3">
+
+                    <label asp-for="IdProducto"
+                           class="form-label">
+
+                        Producto
+
+                    </label>
+
+                    <select asp-for="IdProducto"
+                            asp-items="ViewBag.Productos"
+                            class="form-select">
+
+                        <option value="">
+                            -- Seleccione un producto --
+                        </option>
+
+                    </select>
+
+                    <span asp-validation-for="IdProducto"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label asp-for="NumeroLote"
+                           class="form-label">
+
+                        Número de lote
+
+                    </label>
+
+                    <input asp-for="NumeroLote"
+                           class="form-control" />
+
+                    <span asp-validation-for="NumeroLote"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label asp-for="Cantidad"
+                           class="form-label">
+
+                        Cantidad
+
+                    </label>
+
+                    <input asp-for="Cantidad"
+                           class="form-control"
+                           type="number"
+                           min="0" />
+
+                    <span asp-validation-for="Cantidad"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label asp-for="FechaIngreso"
+                               class="form-label">
+
+                            Fecha de ingreso
+
+                        </label>
+
+                        <input asp-for="FechaIngreso"
+                               class="form-control"
+                               type="date" />
+
+                        <span asp-validation-for="FechaIngreso"
+                              class="text-danger">
+                        </span>
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label asp-for="FechaVencimiento"
+                               class="form-label">
+
+                            Fecha de vencimiento
+
+                        </label>
+
+                        <input asp-for="FechaVencimiento"
+                               class="form-control"
+                               type="date" />
+
+                        <span asp-validation-for="FechaVencimiento"
+                              class="text-danger">
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <div class="form-check mb-3">
+
+                    <input asp-for="Estado"
+                           class="form-check-input" />
+
+                    <label asp-for="Estado"
+                           class="form-check-label">
+
+                        Lote activo
+
+                    </label>
+
+                </div>
+
+                <button type="submit"
+                        class="btn btn-primary">
+
+                    Guardar cambios
+
+                </button>
+
+                <a asp-action="Index"
+                   class="btn btn-secondary">
+
+                    Cancelar
+
+                </a>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+@section Scripts {
+
+    @{
+        await Html.RenderPartialAsync(
+            "_ValidationScriptsPartial");
+    }
+
+}

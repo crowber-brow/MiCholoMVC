@@ -1,0 +1,448 @@
+﻿@model MiCholoMVC.ViewModels.ReportePerdidasViewModel
+
+@{
+    ViewData["Title"] = "Reporte de Pérdidas";
+}
+
+<div class="container-fluid mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2>Reporte de Pérdidas</h2>
+
+            <p class="text-muted">
+                Consulta de pérdidas por fecha y motivo.
+            </p>
+
+        </div>
+
+        <a asp-action="Index"
+           class="btn btn-secondary">
+            Volver
+        </a>
+
+    </div>
+
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header">
+
+            <strong>
+                Filtros de búsqueda
+            </strong>
+
+        </div>
+
+        <div class="card-body">
+
+            <form asp-action="Perdidas"
+                  method="get">
+
+                <div class="row g-3">
+
+                    <div class="col-md-4">
+
+                        <label asp-for="FechaDesde"
+                               class="form-label">
+                            Fecha desde
+                        </label>
+
+                        <input asp-for="FechaDesde"
+                               type="date"
+                               class="form-control" />
+
+                    </div>
+
+                    <div class="col-md-4">
+
+                        <label asp-for="FechaHasta"
+                               class="form-label">
+                            Fecha hasta
+                        </label>
+
+                        <input asp-for="FechaHasta"
+                               type="date"
+                               class="form-control" />
+
+                    </div>
+
+                    <div class="col-md-4">
+
+                        <label asp-for="Motivo"
+                               class="form-label">
+                            Motivo
+                        </label>
+
+                        <select asp-for="Motivo"
+                                class="form-select">
+
+                            <option value="">
+                                Todos los motivos
+                            </option>
+
+                            <option value="ROBO">
+                                ROBO
+                            </option>
+
+                            <option value="ROTURA">
+                                ROTURA
+                            </option>
+
+                            <option value="EXTRAVIO">
+                                EXTRAVIO
+                            </option>
+
+                            <option value="DETERIORO">
+                                DETERIORO
+                            </option>
+
+                            <option value="MERMA">
+                                MERMA
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+                <div class="mt-3">
+
+                    <button type="submit"
+                            class="btn btn-primary">
+                        Buscar
+                    </button>
+
+                    <a asp-action="Perdidas"
+                       class="btn btn-secondary">
+                        Limpiar filtros
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <div class="row g-4 mb-4">
+
+        <div class="col-md-4">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body">
+
+                    <h6 class="text-muted">
+                        Cantidad total perdida
+                    </h6>
+
+                    <h3>
+                        @Model.CantidadTotal
+                    </h3>
+
+                    <p class="mb-0 text-muted">
+                        unidades
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-4">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body">
+
+                    <h6 class="text-muted">
+                        Valor económico
+                    </h6>
+
+                    <h3>
+                        S/ @Model.ValorEconomicoTotal.ToString("F2")
+                    </h3>
+
+                    <p class="mb-0 text-muted">
+                        calculado con precio de compra
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-4">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body">
+
+                    <h6 class="text-muted">
+                        Registros de pérdidas
+                    </h6>
+
+                    <h3>
+                        @Model.Perdidas.Count
+                    </h3>
+
+                    <p class="mb-0 text-muted">
+                        incidentes registrados
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header">
+
+            <strong>
+                Resumen por motivo
+            </strong>
+
+        </div>
+
+        <div class="card-body">
+
+            @if (!Model.ResumenPorMotivo.Any())
+            {
+                <div class="alert alert-info">
+                    No existen pérdidas para los filtros seleccionados.
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+
+                    <table class="table table-bordered">
+
+                        <thead class="table-dark">
+
+                            <tr>
+
+                                <th>
+                                    Motivo
+                                </th>
+
+                                <th>
+                                    Cantidad
+                                </th>
+
+                                <th>
+                                    Valor económico
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            @foreach (var resumen in Model.ResumenPorMotivo)
+                            {
+                                <tr>
+
+                                    <td>
+
+                                        @if (resumen.Motivo == "ROBO")
+                                        {
+                                            <span class="badge bg-danger">
+                                                @resumen.Motivo
+                                            </span>
+                                        }
+                                        else if (resumen.Motivo == "ROTURA")
+                                        {
+                                            <span class="badge bg-warning text-dark">
+                                                @resumen.Motivo
+                                            </span>
+                                        }
+                                        else if (resumen.Motivo == "EXTRAVIO")
+                                        {
+                                            <span class="badge bg-secondary">
+                                                @resumen.Motivo
+                                            </span>
+                                        }
+                                        else if (resumen.Motivo == "DETERIORO")
+                                        {
+                                            <span class="badge bg-warning text-dark">
+                                                @resumen.Motivo
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-info text-dark">
+                                                @resumen.Motivo
+                                            </span>
+                                        }
+
+                                    </td>
+
+                                    <td>
+                                        @resumen.Cantidad
+                                    </td>
+
+                                    <td>
+                                        <strong>
+                                            S/ @resumen.ValorEconomico.ToString("F2")
+                                        </strong>
+                                    </td>
+
+                                </tr>
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+            }
+
+        </div>
+
+    </div>
+
+    <div class="card shadow-sm">
+
+        <div class="card-header">
+
+            <strong>
+                Detalle de pérdidas
+            </strong>
+
+        </div>
+
+        <div class="card-body">
+
+            @if (!Model.Perdidas.Any())
+            {
+                <div class="alert alert-info">
+                    No existen pérdidas para los filtros seleccionados.
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+
+                    <table class="table table-bordered table-hover align-middle">
+
+                        <thead class="table-dark">
+
+                            <tr>
+
+                                <th>
+                                    N°
+                                </th>
+
+                                <th>
+                                    Fecha
+                                </th>
+
+                                <th>
+                                    Producto
+                                </th>
+
+                                <th>
+                                    Lote
+                                </th>
+
+                                <th>
+                                    Cantidad
+                                </th>
+
+                                <th>
+                                    Motivo
+                                </th>
+
+                                <th>
+                                    Justificación
+                                </th>
+
+                                <th>
+                                    Precio compra
+                                </th>
+
+                                <th>
+                                    Valor económico
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            @foreach (var perdida in Model.Perdidas)
+                            {
+                                <tr>
+
+                                    <td>
+                                        @perdida.IdPerdida
+                                    </td>
+
+                                    <td>
+                                        @perdida.Fecha.ToString("dd/MM/yyyy HH:mm")
+                                    </td>
+
+                                    <td>
+                                        @perdida.Producto
+                                    </td>
+
+                                    <td>
+                                        @perdida.NumeroLote
+                                    </td>
+
+                                    <td>
+                                        @perdida.Cantidad
+                                    </td>
+
+                                    <td>
+
+                                        <span class="badge bg-danger">
+                                            @perdida.Motivo
+                                        </span>
+
+                                    </td>
+
+                                    <td>
+                                        @perdida.Justificacion
+                                    </td>
+
+                                    <td>
+                                        S/ @perdida.PrecioCompra.ToString("F2")
+                                    </td>
+
+                                    <td>
+
+                                        <strong>
+                                            S/ @perdida.ValorEconomico.ToString("F2")
+                                        </strong>
+
+                                    </td>
+
+                                </tr>
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+            }
+
+        </div>
+
+    </div>
+
+</div>

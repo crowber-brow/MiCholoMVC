@@ -1,0 +1,124 @@
+﻿@model IEnumerable<MiCholoMVC.Models.Producto>
+
+@{
+    ViewData["Title"] = "Productos";
+}
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+
+        <h2>Productos</h2>
+
+        <a asp-action="Create"
+           class="btn btn-primary">
+
+            + Nuevo producto
+
+        </a>
+
+    </div>
+
+    <div class="card shadow-sm">
+
+        <div class="card-body">
+
+            <div class="table-responsive">
+
+                <table class="table table-striped table-hover">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>ID</th>
+                            <th>Producto</th>
+                            <th>Categoría</th>
+                            <th>Proveedor</th>
+                            <th>Precio Compra</th>
+                            <th>Precio Venta</th>
+                            <th>Stock Mínimo</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+
+                                <td>
+                                    @item.IdProducto
+                                </td>
+
+                                <td>
+                                    @item.Nombre
+                                </td>
+
+                                <td>
+                                    @item.Categoria?.Nombre
+                                </td>
+
+                                <td>
+                                    @(item.Proveedor?.RazonSocial ?? "Sin proveedor")
+                                </td>
+
+                                <td>
+                                    S/ @item.PrecioCompra.ToString("0.00")
+                                </td>
+
+                                <td>
+                                    S/ @item.PrecioVenta.ToString("0.00")
+                                </td>
+
+                                <td>
+                                    @item.StockMinimo
+                                </td>
+
+                                <td>
+
+                                    @if (item.Estado)
+                                    {
+                                        <span class="badge bg-success">
+                                            Activo
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">
+                                            Inactivo
+                                        </span>
+                                    }
+
+                                </td>
+
+                                <td>
+
+                                    <a asp-action="Edit"
+                                       asp-route-id="@item.IdProducto"
+                                       class="btn btn-sm btn-warning">
+
+                                        Editar
+
+                                    </a>
+
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
