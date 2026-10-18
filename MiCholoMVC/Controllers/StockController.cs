@@ -22,9 +22,9 @@ namespace MiCholoMVC.Controllers
                 {
                     IdProducto = p.IdProducto,
                     Nombre = p.Nombre,
-                    StockActual = p.Lotes
-                        .Where(l => l.Estado)
-                        .Sum(l => l.Cantidad),
+                    StockActual = _context.Lotes.Where(l => l.IdProducto == p.IdProducto && l.Estado && l.FechaVencimiento >= MiCholoMVC.Services.ReglasNegocio.Hoy).Sum(l => (int?)l.Cantidad) ?? 0,
+                    StockFisico = _context.Lotes.Where(l => l.IdProducto == p.IdProducto).Sum(l => (int?)l.Cantidad) ?? 0,
+                    StockVencido = _context.Lotes.Where(l => l.IdProducto == p.IdProducto && l.FechaVencimiento < MiCholoMVC.Services.ReglasNegocio.Hoy).Sum(l => (int?)l.Cantidad) ?? 0,
                     StockMinimo = p.StockMinimo
                 })
                 .OrderBy(p => p.Nombre)

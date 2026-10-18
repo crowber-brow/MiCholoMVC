@@ -1,276 +1,94 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using MiCholoMVC.Data;
+using MiCholoMVC.Services;
 using MiCholoMVC.ViewModels;
-
-namespace MiCholoMVC.Controllers
+namespace MiCholoMVC.Controllers;
+public class ReportesController(MiCholoDbContext db):Controller
 {
-    public class ReportesController : Controller
+    public IActionResult Index()=>View();
+    public Task<IActionResult> Ventas(DateTime? fechaDesde,DateTime? fechaHasta,int? idCaja,int? idCategoria)=>Informes("ventas",fechaDesde,fechaHasta,null,idCategoria,idCaja);
+    public Task<IActionResult> Perdidas(DateTime? fechaDesde,DateTime? fechaHasta,string? motivo)=>Informes("perdidas",fechaDesde,fechaHasta,motivo:motivo);
+    public async Task<IActionResult> Informes(string tipo="ventas",DateTime? desde=null,DateTime? hasta=null,int? idProducto=null,int? idCategoria=null,int? idCaja=null,string? motivo=null,string? grupo=null,bool incluirAnuladas=false,bool pdf=false)
     {
-        private readonly MiCholoDbContext _context;
-
-        public ReportesController(MiCholoDbContext context)
+        if(tipo!="ventas"){idCategoria=null;incluirAnuladas=false;}
+        if(tipo!="ventas"&&tipo!="caja")idCaja=null;
+        if(tipo=="caja")idProducto=null;
+        if(tipo!="perdidas")motivo=null;
+        if(tipo!="vencimientos")grupo=null;
+        var m=new InformeViewModel{Tipo=tipo,Desde=desde,Hasta=hasta,IdProducto=idProducto,IdCategoria=idCategoria,IdCaja=idCaja,Motivo=motivo,Grupo=grupo,IncluirAnuladas=incluirAnuladas};
+        m.Productos=await db.Productos.OrderBy(p=>p.Nombre).Select(p=>new SelectListItem(p.Nombre,p.IdProducto.ToString())).ToListAsync();
+        m.Categorias=await db.Categorias.OrderBy(c=>c.Nombre).Select(c=>new SelectListItem(c.Nombre,c.IdCategoria.ToString())).ToListAsync();
+        m.Cajas=await db.Cajas.OrderByDescending(c=>c.IdCaja).Select(c=>new SelectListItem(c.Nombre+" #"+c.IdCaja,c.IdCaja.ToString())).ToListAsync();
+        if(desde>hasta){ModelState.AddModelError("","La fecha inicial no puede superar la final.");return View("Informes",m);}
+        string Mon(decimal x)=>"S/ "+x.ToString("F2");
+        if(tipo=="ventas")
         {
-            _context = context;
+            m.Titulo="Reporte de ventas";m.Columnas=["Venta","Fecha","Caja","Pago","Estado","Unidades","Importe"];
+            var q=db.Ventas.Include(v=>v.Caja).Include(v=>v.Detalles!).ThenInclude(d=>d.Lote).AsQueryable();
+            if(!incluirAnuladas)q=q.Where(v=>v.Estado=="VIGENTE");
+            if(desde.HasValue)q=q.Where(v=>v.Fecha>=desde.Value.Date);if(hasta.HasValue)q=q.Where(v=>v.Fecha<hasta.Value.Date.AddDays(1));if(idCaja.HasValue)q=q.Where(v=>v.IdCaja==idCaja);
+            decimal total=0,utilidad=0;int unidades=0,vigentes=0,anuladas=0;
+            foreach(var v in await q.OrderByDescending(v=>v.Fecha).ToListAsync())
+            {
+                var detalles=v.Detalles!.Where(d=>(!idCategoria.HasValue||d.IdCategoriaHistorica==idCategoria)&&(!idProducto.HasValue||d.Lote!.IdProducto==idProducto)).ToList();
+                if(detalles.Count==0)continue;var importe=detalles.Sum(d=>d.Subtotal);var cantidad=detalles.Sum(d=>d.Cantidad);
+                if(v.Estado=="VIGENTE"){total+=importe;utilidad+=detalles.Sum(d=>d.Subtotal-d.CostoUnitario*d.Cantidad);unidades+=cantidad;vigentes++;}else anuladas++;
+                m.Filas.Add([v.IdVenta.ToString(),v.Fecha.ToString("dd/MM/yyyy HH:mm"),v.Caja?.Nombre??"",v.MetodoPago,v.Estado,cantidad.ToString(),Mon(importe)]);
+            }
+            m.Totales=[$"Ventas vigentes: {vigentes} | Anuladas mostradas: {anuladas}",$"Unidades vigentes: {unidades} | Total vigente: {Mon(total)}",$"Utilidad bruta estimada vigente: {Mon(utilidad)}"];
         }
-
-        [HttpGet]
-        public IActionResult Index()
+        else if(tipo=="perdidas")
         {
-            return View();
+            m.Titulo="Reporte de pérdidas";m.Columnas=["Fecha","Producto","Lote","Motivo","Cantidad","Costo unit.","Valor perdido"];
+            var q=db.Perdidas.Include(p=>p.Lote!).ThenInclude(l=>l.Producto).AsQueryable();
+            if(desde.HasValue)q=q.Where(p=>p.Fecha>=desde.Value.Date);if(hasta.HasValue)q=q.Where(p=>p.Fecha<hasta.Value.Date.AddDays(1));if(idProducto.HasValue)q=q.Where(p=>p.Lote!.IdProducto==idProducto);if(!string.IsNullOrWhiteSpace(motivo))q=q.Where(p=>p.Motivo==motivo);
+            var datos=await q.OrderByDescending(p=>p.Fecha).ToListAsync();
+            foreach(var p in datos)m.Filas.Add([p.Fecha.ToString("dd/MM/yyyy"),p.Lote?.Producto?.Nombre??"",p.Lote?.NumeroLote??"",p.Motivo,p.Cantidad.ToString(),Mon(p.ValorUnitario),Mon(p.ValorTotal)]);
+            m.Totales=[$"Registros: {datos.Count} | Unidades: {datos.Sum(p=>p.Cantidad)} | Valor perdido: {Mon(datos.Sum(p=>p.ValorTotal))}"];
+            m.Totales.AddRange(datos.GroupBy(p=>p.Motivo).Select(g=>$"{g.Key}: {g.Sum(p=>p.Cantidad)} unidades | {Mon(g.Sum(p=>p.ValorTotal))}"));
         }
-
-        [HttpGet]
-        public async Task<IActionResult> Ventas(
-            DateTime? fechaDesde,
-            DateTime? fechaHasta,
-            int? idCaja,
-            int? idCategoria)
+        else if(tipo=="inventario"||tipo=="stock")
         {
-            var modelo = new ReporteVentasViewModel
-            {
-                FechaDesde = fechaDesde,
-                FechaHasta = fechaHasta,
-                IdCaja = idCaja,
-                IdCategoria = idCategoria
-            };
-
-            modelo.Cajas = await _context.Cajas
-                .OrderBy(c => c.Nombre)
-                .Select(c => new ReporteFiltroCajaViewModel
-                {
-                    IdCaja = c.IdCaja,
-                    Nombre = c.Nombre
-                })
-                .ToListAsync();
-
-            modelo.Categorias = await _context.Categorias
-                .Where(c => c.Estado)
-                .OrderBy(c => c.Nombre)
-                .Select(c => new ReporteFiltroCategoriaViewModel
-                {
-                    IdCategoria = c.IdCategoria,
-                    Nombre = c.Nombre
-                })
-                .ToListAsync();
-
-            var consulta = _context.Ventas
-                .AsQueryable();
-
-            if (fechaDesde.HasValue)
-            {
-                var inicio = fechaDesde.Value.Date;
-
-                consulta = consulta.Where(v =>
-                    v.Fecha >= inicio);
-            }
-
-            if (fechaHasta.HasValue)
-            {
-                var fin = fechaHasta.Value.Date.AddDays(1);
-
-                consulta = consulta.Where(v =>
-                    v.Fecha < fin);
-            }
-
-            if (idCaja.HasValue)
-            {
-                consulta = consulta.Where(v =>
-                    v.IdCaja == idCaja.Value);
-            }
-
-            var ventas = await consulta
-                .Include(v => v.Caja)
-                .OrderByDescending(v => v.Fecha)
-                .ToListAsync();
-
-            var idsVentas = ventas
-                .Select(v => v.IdVenta)
-                .ToList();
-
-            var detalles = await _context.DetalleVentas
-                .Where(d => idsVentas.Contains(d.IdVenta))
-                .Join(
-                    _context.Lotes,
-                    d => d.IdLote,
-                    l => l.IdLote,
-                    (d, l) => new
-                    {
-                        d.IdVenta,
-                        d.Cantidad,
-                        l.IdProducto
-                    })
-                .Join(
-                    _context.Productos,
-                    x => x.IdProducto,
-                    p => p.IdProducto,
-                    (x, p) => new
-                    {
-                        x.IdVenta,
-                        x.Cantidad,
-                        p.IdCategoria,
-                        Categoria = p.Categoria
-                    })
-                .ToListAsync();
-
-            if (idCategoria.HasValue)
-            {
-                var idsVentasCategoria = detalles
-                    .Where(d => d.IdCategoria == idCategoria.Value)
-                    .Select(d => d.IdVenta)
-                    .Distinct()
-                    .ToHashSet();
-
-                ventas = ventas
-                    .Where(v => idsVentasCategoria.Contains(v.IdVenta))
-                    .ToList();
-            }
-
-            modelo.Ventas = ventas
-                .Select(v =>
-                {
-                    var detallesVenta = detalles
-                        .Where(d => d.IdVenta == v.IdVenta)
-                        .ToList();
-
-                    var categorias = detallesVenta
-                        .Where(d => d.Categoria != null)
-                        .Select(d => d.Categoria!.Nombre)
-                        .Distinct()
-                        .ToList();
-
-                    return new ReporteVentaDetalleViewModel
-                    {
-                        IdVenta = v.IdVenta,
-                        Fecha = v.Fecha,
-                        Caja = v.Caja?.Nombre ?? "Sin caja",
-                        MetodoPago = v.MetodoPago,
-                        Total = v.Total,
-                        CantidadProductos = detallesVenta.Sum(d => d.Cantidad),
-                        Categorias = categorias.Count > 0
-                            ? string.Join(", ", categorias)
-                            : "Sin categoría"
-                    };
-                })
-                .ToList();
-
-            modelo.TotalVentas = modelo.Ventas
-                .Sum(v => v.Total);
-
-            modelo.CantidadVentas = modelo.Ventas
-                .Count;
-
-            modelo.CantidadProductosVendidos = modelo.Ventas
-                .Sum(v => v.CantidadProductos);
-
-            return View(modelo);
+            m.Titulo=tipo=="stock"?"Reporte de stock mínimo":"Reporte de inventario";m.Columnas=["Producto","Lote","Físico","Disponible","Vencido","Mínimo","Costo unit.","Valor físico"];
+            var q=db.Lotes.Include(l=>l.Producto).AsQueryable();if(idProducto.HasValue)q=q.Where(l=>l.IdProducto==idProducto);if(desde.HasValue)q=q.Where(l=>l.FechaIngreso>=desde.Value.Date);if(hasta.HasValue)q=q.Where(l=>l.FechaIngreso<hasta.Value.Date.AddDays(1));
+            var datos=await q.OrderBy(l=>l.Producto!.Nombre).ToListAsync();
+            var bajos=await db.Productos.Where(p=>p.Estado).Where(p=>(db.Lotes.Where(l=>l.IdProducto==p.IdProducto&&l.Estado&&l.FechaVencimiento>=ReglasNegocio.Hoy).Sum(l=>(int?)l.Cantidad)??0)<=p.StockMinimo).Select(p=>p.IdProducto).ToListAsync();
+            if(tipo=="stock")datos=datos.Where(l=>bajos.Contains(l.IdProducto)).ToList();
+            foreach(var l in datos)m.Filas.Add([l.Producto!.Nombre,l.NumeroLote,l.Cantidad.ToString(),(l.Estado&&ReglasNegocio.Vendible(l.FechaVencimiento)?l.Cantidad:0).ToString(),(!ReglasNegocio.Vendible(l.FechaVencimiento)?l.Cantidad:0).ToString(),l.Producto.StockMinimo.ToString(),Mon(l.CostoUnitario),Mon(l.Cantidad*l.CostoUnitario)]);
+            if(tipo=="stock")foreach(var p in await db.Productos.Where(p=>bajos.Contains(p.IdProducto)&&!db.Lotes.Any(l=>l.IdProducto==p.IdProducto)&&(!idProducto.HasValue||p.IdProducto==idProducto)).ToListAsync())m.Filas.Add([p.Nombre,"Sin lotes","0","0","0",p.StockMinimo.ToString(),Mon(p.PrecioCompra),Mon(0)]);
+            m.Totales=[$"Lotes: {datos.Count} | Unidades físicas: {datos.Sum(l=>l.Cantidad)} | Valor físico: {Mon(datos.Sum(l=>l.Cantidad*l.CostoUnitario))}"];
         }
-
-        [HttpGet]
-        public async Task<IActionResult> Perdidas(
-            DateTime? fechaDesde,
-            DateTime? fechaHasta,
-            string? motivo)
+        else if(tipo=="vencimientos")
         {
-            var modelo = new ReportePerdidasViewModel
-            {
-                FechaDesde = fechaDesde,
-                FechaHasta = fechaHasta,
-                Motivo = motivo
-            };
-
-            var consulta = _context.Perdidas
-                .AsQueryable();
-
-            if (fechaDesde.HasValue)
-            {
-                var inicio = fechaDesde.Value.Date;
-
-                consulta = consulta.Where(p =>
-                    p.Fecha >= inicio);
-            }
-
-            if (fechaHasta.HasValue)
-            {
-                var fin = fechaHasta.Value.Date.AddDays(1);
-
-                consulta = consulta.Where(p =>
-                    p.Fecha < fin);
-            }
-
-            if (!string.IsNullOrWhiteSpace(motivo))
-            {
-                consulta = consulta.Where(p =>
-                    p.Motivo == motivo);
-            }
-
-            var perdidas = await consulta
-                .Join(
-                    _context.Lotes,
-                    perdida => perdida.IdLote,
-                    lote => lote.IdLote,
-                    (perdida, lote) => new
-                    {
-                        perdida.IdPerdida,
-                        perdida.Fecha,
-                        perdida.Cantidad,
-                        perdida.Motivo,
-                        perdida.Justificacion,
-                        lote.NumeroLote,
-                        lote.IdProducto
-                    })
-                .Join(
-                    _context.Productos,
-                    x => x.IdProducto,
-                    producto => producto.IdProducto,
-                    (x, producto) => new
-                    {
-                        x.IdPerdida,
-                        x.Fecha,
-                        x.Cantidad,
-                        x.Motivo,
-                        x.Justificacion,
-                        x.NumeroLote,
-                        Producto = producto.Nombre,
-                        producto.PrecioCompra
-                    })
-                .OrderByDescending(x => x.Fecha)
-                .ToListAsync();
-
-            modelo.Perdidas = perdidas
-                .Select(p => new ReportePerdidaDetalleViewModel
-                {
-                    IdPerdida = p.IdPerdida,
-                    Fecha = p.Fecha,
-                    Producto = p.Producto,
-                    NumeroLote = p.NumeroLote,
-                    Cantidad = p.Cantidad,
-                    Motivo = p.Motivo,
-                    Justificacion = p.Justificacion,
-                    PrecioCompra = p.PrecioCompra,
-                    ValorEconomico =
-                        p.Cantidad * p.PrecioCompra
-                })
-                .ToList();
-
-            modelo.CantidadTotal = modelo.Perdidas
-                .Sum(p => p.Cantidad);
-
-            modelo.ValorEconomicoTotal = modelo.Perdidas
-                .Sum(p => p.ValorEconomico);
-
-            modelo.ResumenPorMotivo = modelo.Perdidas
-                .GroupBy(p => p.Motivo)
-                .Select(g => new ReportePerdidaResumenViewModel
-                {
-                    Motivo = g.Key,
-                    Cantidad = g.Sum(p => p.Cantidad),
-                    ValorEconomico = g.Sum(p => p.ValorEconomico)
-                })
-                .OrderByDescending(x => x.ValorEconomico)
-                .ToList();
-
-            return View(modelo);
+            m.Titulo="Reporte de vencimientos";m.Columnas=["Producto","Lote","Vencimiento","Estado","Cantidad","Valor al costo"];
+            var q=db.Lotes.Where(l=>l.Estado&&l.Cantidad>0);if(idProducto.HasValue)q=q.Where(l=>l.IdProducto==idProducto);if(desde.HasValue)q=q.Where(l=>l.FechaVencimiento>=desde.Value.Date);if(hasta.HasValue)q=q.Where(l=>l.FechaVencimiento<hasta.Value.Date.AddDays(1));
+            var datos=await q.OrderBy(l=>l.FechaVencimiento).Select(l=>new VencimientoViewModel{Producto=l.Producto!.Nombre,NumeroLote=l.NumeroLote,FechaVencimiento=l.FechaVencimiento,Cantidad=l.Cantidad,CostoUnitario=l.CostoUnitario}).ToListAsync();if(!string.IsNullOrWhiteSpace(grupo))datos=datos.Where(l=>l.Grupo==grupo).ToList();
+            foreach(var l in datos)m.Filas.Add([l.Producto,l.NumeroLote,l.FechaVencimiento.ToString("dd/MM/yyyy"),l.EstadoVencimiento,l.Cantidad.ToString(),Mon(l.ValorTotal)]);
+            m.Totales=[$"Lotes: {datos.Count} | Unidades: {datos.Sum(l=>l.Cantidad)} | Valor al costo: {Mon(datos.Sum(l=>l.ValorTotal))}"];
         }
+        else if(tipo=="caja")
+        {
+            m.Titulo="Reporte de movimientos de caja";m.Columnas=["Fecha","Caja","Tipo","Monto","Descripción"];
+            var q=db.MovimientosCaja.Include(x=>x.Caja).AsQueryable();if(idCaja.HasValue)q=q.Where(x=>x.IdCaja==idCaja);if(desde.HasValue)q=q.Where(x=>x.Fecha>=desde.Value.Date);if(hasta.HasValue)q=q.Where(x=>x.Fecha<hasta.Value.Date.AddDays(1));
+            var datos=await q.OrderByDescending(x=>x.Fecha).ToListAsync();foreach(var x in datos)m.Filas.Add([x.Fecha.ToString("dd/MM/yyyy HH:mm"),x.Caja?.Nombre??"",x.Tipo,Mon(x.Monto),x.Descripcion??""]);
+            var ingresos=datos.Where(x=>x.Tipo=="INGRESO").Sum(x=>x.Monto);var egresos=datos.Where(x=>x.Tipo=="EGRESO").Sum(x=>x.Monto);m.Totales=[$"Ingresos: {Mon(ingresos)} | Egresos: {Mon(egresos)} | Neto del período: {Mon(ingresos-egresos)}"];
+        }
+        else return BadRequest("Tipo de reporte inválido.");
+        if(pdf)
+        {
+            var filtros=new List<string>{m.Periodo};
+            if(idProducto.HasValue)filtros.Add("Producto: "+m.Productos.FirstOrDefault(p=>p.Value==idProducto.ToString())?.Text);
+            if(idCategoria.HasValue)filtros.Add("Categoría: "+m.Categorias.FirstOrDefault(p=>p.Value==idCategoria.ToString())?.Text);
+            if(idCaja.HasValue)filtros.Add("Caja: "+m.Cajas.FirstOrDefault(p=>p.Value==idCaja.ToString())?.Text);
+            if(motivo!=null)filtros.Add("Motivo: "+motivo);if(grupo!=null)filtros.Add("Grupo: "+grupo);
+            filtros.AddRange(m.Totales);filtros.Add(" ");
+            if(m.Filas.Count==0)filtros.Add("No hay registros para los filtros seleccionados.");
+            // Registros en bloques para que nombres largos no rompan columnas ni pierdan información.
+            for(var i=0;i<m.Filas.Count;i++){filtros.Add($"Registro {i+1}");filtros.AddRange(m.Filas[i].Select((valor,j)=>$"{m.Columnas[j]}: {valor}"));filtros.Add(" ");}
+            return File(PdfService.Crear(m.Titulo,filtros),"application/pdf",$"reporte-{tipo}.pdf");
+        }
+        return View("Informes",m);
     }
 }

@@ -177,3 +177,19 @@ body {
         padding-left: 10px;
     }
 }
+
+.pos-results { max-height: 65vh; overflow-y: auto; }
+.card { border-radius: 14px; }
+@media (max-width: 768px) {
+ .sidebar { width: 72px; min-width: 72px; }
+ .sidebar .nav-link span, .sidebar-header small, .sidebar-header h4, .menu-section { display: none; }
+ .sidebar-header { padding: 12px 4px; }
+ .topbar .text-muted { display: none; }
+ main.container-fluid { padding: 12px !important; }
+}
+@media print {
+ .sidebar,.topbar,footer,.no-print { display:none !important; }
+ .main-content { width:100%;margin:0 !important; }
+ main { padding:0 !important; }
+ .receipt { border:0;box-shadow:none !important; }
+}

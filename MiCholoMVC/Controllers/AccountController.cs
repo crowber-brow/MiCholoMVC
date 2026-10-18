@@ -9,6 +9,8 @@ namespace MiCholoMVC.Controllers
 {
     public class AccountController : Controller
     {
+        private readonly MiCholoMVC.Services.AccesoService _acceso;
+        public AccountController(MiCholoMVC.Services.AccesoService acceso) { _acceso = acceso; }
         [AllowAnonymous]
         [HttpGet]
         public IActionResult Login()
@@ -29,18 +31,18 @@ namespace MiCholoMVC.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            if (model.Usuario.Trim().ToLower() != "micholo@gmail.com"
-                || model.Password != "cholo123")
+            if (!_acceso.Autenticar(model.Usuario, model.Password, HttpContext.Connection.RemoteIpAddress?.ToString() ?? "local"))
             {
                 ModelState.AddModelError(
                     "",
-                    "Correo o contraseña incorrectos.");
+                    "Acceso no válido. Si hubo varios intentos fallidos, espere cinco minutos.");
 
                 return View(model);
             }
 
             var claims = new List<Claim>
             {
+                new Claim("VersionCredencial", _acceso.VersionCredencial()),
                 new Claim(
                     ClaimTypes.Name,
                     "Administrador Mi Cholo"),
@@ -80,6 +82,19 @@ namespace MiCholoMVC.Controllers
                 CookieAuthenticationDefaults.AuthenticationScheme);
 
             return RedirectToAction("Login");
+        }
+        [HttpGet]
+        public IActionResult Password() => View();
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Password(string actual, string nueva, string confirmar)
+        {
+            try {
+                if (nueva != confirmar) throw new InvalidOperationException("Las contraseñas no coinciden.");
+                _acceso.Cambiar(actual ?? "", nueva ?? "");
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                TempData["Mensaje"] = "Contraseña actualizada. Inicie sesión nuevamente.";
+                return RedirectToAction("Login");
+            } catch (InvalidOperationException ex) { ModelState.AddModelError("", ex.Message); return View(); }
         }
     }
 }

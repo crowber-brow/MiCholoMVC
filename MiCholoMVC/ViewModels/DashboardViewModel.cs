@@ -3,6 +3,15 @@
     public class DashboardViewModel
     {
         public decimal VentasHoy { get; set; }
+        public decimal VentasMes { get; set; }
+        public decimal CajaActual { get; set; }
+        public decimal UtilidadBrutaMes { get; set; }
+        public decimal ValorPorVencer { get; set; }
+        public decimal PerdidasMes { get; set; }
+        public List<SerieDashboard> VentasPorMes {get;set;}=[];
+        public List<SerieDashboard> ProductosMasVendidos {get;set;}=[];
+        public List<SerieDashboard> PerdidasPorMotivo {get;set;}=[];
+        public List<SerieDashboard> VencimientosPorGrupo {get;set;}=[];
 
         public decimal VentasTotales { get; set; }
 
@@ -32,6 +41,11 @@
         public decimal Total { get; set; }
 
         public int Cantidad { get; set; }
+    }
+    public class SerieDashboard
+    {
+        public string Nombre {get;set;}="";
+        public decimal Valor {get;set;}
     }
 
     public class VentaDiaViewModel

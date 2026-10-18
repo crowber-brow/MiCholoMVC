@@ -16,6 +16,9 @@ namespace MiCholoMVC.Models
         public string Tipo { get; set; } = string.Empty;
 
         public int Cantidad { get; set; }
+        public int SaldoLote { get; set; }
+        public int SaldoProducto { get; set; }
+        public decimal ValorUnitario { get; set; }
 
         [StringLength(250)]
         public string? Descripcion { get; set; }

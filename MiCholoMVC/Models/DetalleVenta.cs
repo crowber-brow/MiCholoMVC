@@ -19,6 +19,12 @@ namespace MiCholoMVC.Models
 
         [Column(TypeName = "decimal(10,2)")]
         public decimal Subtotal { get; set; }
+        public decimal CostoUnitario { get; set; }
+        [StringLength(150)]
+        public string ProductoNombre { get; set; } = string.Empty;
+        [StringLength(150)]
+        public string CategoriaNombre { get; set; } = string.Empty;
+        public int IdCategoriaHistorica { get; set; }
 
         public Venta? Venta { get; set; }
 

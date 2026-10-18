@@ -7,6 +7,8 @@
         public string Nombre { get; set; } = string.Empty;
 
         public int StockActual { get; set; }
+        public int StockFisico { get; set; }
+        public int StockVencido { get; set; }
 
         public int StockMinimo { get; set; }
 

@@ -1,12 +1,16 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiCholoMVC.Data;
 using MiCholoMVC.Repositories;
 using MiCholoMVC.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddScoped<OperacionService>();
+builder.Services.AddSingleton<AccesoService>();
 
 builder.Services.AddDbContext<MiCholoDbContext>(options =>
     options.UseSqlServer(
@@ -36,6 +40,7 @@ builder.Services.AddScoped<ICajaService, CajaService>();
 builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.Add(new AuthorizeFilter());
+    options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
 });
 
 builder.Services
@@ -47,6 +52,17 @@ builder.Services
         options.AccessDeniedPath = "/Account/Login";
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.Events.OnValidatePrincipal = async context =>
+        {
+            var acceso = context.HttpContext.RequestServices.GetRequiredService<AccesoService>();
+            if (context.Principal?.FindFirst("VersionCredencial")?.Value != acceso.VersionCredencial())
+            {
+                context.RejectPrincipal();
+                await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            }
+        };
     });
 
 var app = builder.Build();
@@ -58,16 +74,14 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapStaticAssets();
-
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Account}/{action=Login}/{id?}")
-    .WithStaticAssets();
+    pattern: "{controller=Account}/{action=Login}/{id?}");
 
 app.Run();

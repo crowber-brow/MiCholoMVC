@@ -1,4 +1,4 @@
-﻿@model MiCholoMVC.Models.Lote
+@model MiCholoMVC.Models.Lote
 
 @{
     ViewData["Title"] = "Editar Lote";
@@ -6,7 +6,7 @@
 
 <div class="container mt-4">
 
-    <h2>Editar Lote</h2>
+    <h2>Editar Lote</h2><p class="alert alert-info">El producto, cantidad y costo se conservan. Registre entradas o salidas desde Inventario para ajustar el stock.</p>
 
     <div class="card shadow-sm">
 
@@ -73,7 +73,7 @@
 
                     </label>
 
-                    <input asp-for="Cantidad"
+                    <input asp-for="Cantidad" readonly
                            class="form-control"
                            type="number"
                            min="0" />

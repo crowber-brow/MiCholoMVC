@@ -1,4 +1,4 @@
-﻿@model MiCholoMVC.ViewModels.LoginViewModel
+@model MiCholoMVC.ViewModels.LoginViewModel
 
 @{
     Layout = null;
@@ -67,6 +67,7 @@
         <div class="login-right">
 
             <div class="login-box">
+                @if(TempData["Mensaje"] != null){<p role="status">@TempData["Mensaje"]</p>}
 
                 <div class="logo">
                     <i class="bi bi-shop"></i>

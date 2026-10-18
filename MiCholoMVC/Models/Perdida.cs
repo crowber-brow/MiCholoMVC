@@ -10,6 +10,9 @@ namespace MiCholoMVC.Models
         public int IdLote { get; set; }
 
         public int Cantidad { get; set; }
+        public decimal ValorUnitario { get; set; }
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        public decimal ValorTotal => Cantidad * ValorUnitario;
 
         [Required]
         [StringLength(30)]

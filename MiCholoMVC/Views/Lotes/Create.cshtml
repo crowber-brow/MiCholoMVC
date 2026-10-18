@@ -1,4 +1,4 @@
-﻿@model MiCholoMVC.Models.Lote
+@model MiCholoMVC.Models.Lote
 
 @{
     ViewData["Title"] = "Nuevo Lote";
@@ -81,7 +81,7 @@
 
                 </div>
 
-                <div class="row">
+                <div class="mb-3"><label asp-for="CostoUnitario">Costo unitario de compra (S/)</label><input asp-for="CostoUnitario" type="number" min="0" step="0.01" class="form-control"/><small>Si es cero, se utiliza el precio de compra actual del producto.</small></div><div class="row">
 
                     <div class="col-md-6 mb-3">
 

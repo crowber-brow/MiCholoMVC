@@ -1,4 +1,4 @@
-﻿@model IEnumerable<MiCholoMVC.Models.Venta>
+@model IEnumerable<MiCholoMVC.Models.Venta>
 
 @{
     ViewData["Title"] = "Ventas";
@@ -83,7 +83,7 @@
                                     </td>
 
                                     <td>
-                                        @venta.MetodoPago
+                                        @venta.MetodoPago <span class="badge @(venta.Estado == "VIGENTE" ? "bg-success" : "bg-secondary")">@venta.Estado</span>
                                     </td>
 
                                     <td>

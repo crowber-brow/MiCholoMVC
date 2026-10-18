@@ -14,6 +14,15 @@ namespace MiCholoMVC.Models
 
         [Column(TypeName = "decimal(10,2)")]
         public decimal Total { get; set; }
+        public decimal DineroRecibido { get; set; }
+        public decimal Vuelto { get; set; }
+        [StringLength(20)]
+        public string Estado { get; set; } = "VIGENTE";
+        public Guid TokenOperacion { get; set; }
+        public DateTime? FechaAnulacion { get; set; }
+        [StringLength(500)]
+        public string? MotivoAnulacion { get; set; }
+        public bool StockDevuelto { get; set; }
 
         [Required]
         [StringLength(30)]

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using MiCholoMVC.Models;
 using MiCholoMVC.Services;
 
@@ -27,7 +27,7 @@ namespace MiCholoMVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Categoria categoria)
+        public async Task<IActionResult> Create([Bind("Nombre,Descripcion,Estado")] Categoria categoria)
         {
             if (!ModelState.IsValid)
             {
@@ -53,7 +53,7 @@ namespace MiCholoMVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Categoria categoria)
+        public async Task<IActionResult> Edit([Bind("IdCategoria,Nombre,Descripcion,Estado")] Categoria categoria)
         {
             if (!ModelState.IsValid)
             {

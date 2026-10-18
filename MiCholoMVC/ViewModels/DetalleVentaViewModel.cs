@@ -4,6 +4,8 @@ namespace MiCholoMVC.ViewModels
 {
     public class DetalleVentaViewModel
     {
+        [Range(1, int.MaxValue)]
+        public int IdProducto { get; set; }
         public int IdLote { get; set; }
 
         public string Producto { get; set; } = string.Empty;

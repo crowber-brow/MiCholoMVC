@@ -1,0 +1,4 @@
+@model List<MiCholoMVC.ViewModels.SerieDashboard>
+@{var max=Model.Select(s=>s.Valor).DefaultIfEmpty(0).Max();}
+@if(Model.Count==0){<p class="text-muted">No hay registros para este período.</p>}
+@foreach(var s in Model){<div class="mb-3"><div class="d-flex justify-content-between"><span>@s.Nombre</span><strong>@s.Valor.ToString("0.##")</strong></div><div class="progress" style="height:16px" role="img" aria-label="@s.Nombre: @s.Valor"><div class="progress-bar bg-primary" style="width:@((max>0?s.Valor/max*100:0).ToString("F2",System.Globalization.CultureInfo.InvariantCulture))%"></div></div></div>}

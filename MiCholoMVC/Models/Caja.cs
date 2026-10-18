@@ -25,6 +25,8 @@ namespace MiCholoMVC.Models
 
         [Column(TypeName = "decimal(10,2)")]
         public decimal? MontoCierre { get; set; }
+        public decimal? EfectivoContado { get; set; }
+        public decimal? Diferencia { get; set; }
 
         public ICollection<Venta>? Ventas { get; set; }
 

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using MiCholoMVC.Data;
@@ -36,7 +36,7 @@ namespace MiCholoMVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Producto producto)
+        public async Task<IActionResult> Create([Bind("Nombre,Descripcion,IdCategoria,IdProveedor,PrecioCompra,PrecioVenta,StockMinimo,Estado")] Producto producto)
         {
             if (producto.PrecioCompra <= 0)
             {
@@ -66,6 +66,7 @@ namespace MiCholoMVC.Controllers
                     "El stock mínimo no puede ser negativo.");
             }
 
+            await ValidarDatos(producto);
             if (!ModelState.IsValid)
             {
                 await CargarCombos(producto.IdCategoria, producto.IdProveedor);
@@ -96,7 +97,7 @@ namespace MiCholoMVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Producto producto)
+        public async Task<IActionResult> Edit([Bind("IdProducto,Nombre,Descripcion,IdCategoria,IdProveedor,PrecioCompra,PrecioVenta,StockMinimo,Estado")] Producto producto)
         {
             if (producto.PrecioCompra <= 0)
             {
@@ -126,6 +127,7 @@ namespace MiCholoMVC.Controllers
                     "El stock mínimo no puede ser negativo.");
             }
 
+            await ValidarDatos(producto);
             if (!ModelState.IsValid)
             {
                 await CargarCombos(
@@ -157,6 +159,13 @@ namespace MiCholoMVC.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        private async Task ValidarDatos(Producto producto)
+        {
+            try { ReglasNegocio.ValidarMoneda(producto.PrecioCompra); ReglasNegocio.ValidarMoneda(producto.PrecioVenta); }
+            catch (InvalidOperationException ex) { ModelState.AddModelError("", ex.Message); }
+            if (!await _context.Categorias.AnyAsync(c => c.IdCategoria == producto.IdCategoria)) ModelState.AddModelError("IdCategoria", "Seleccione una categoría existente.");
+            if (producto.IdProveedor.HasValue && !await _context.Proveedores.AnyAsync(p => p.IdProveedor == producto.IdProveedor)) ModelState.AddModelError("IdProveedor", "Seleccione un proveedor existente.");
+        }
         private async Task CargarCombos(
             int? categoriaSeleccionada = null,
             int? proveedorSeleccionado = null)

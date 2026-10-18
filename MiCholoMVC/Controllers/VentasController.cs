@@ -1,341 +1,54 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiCholoMVC.Data;
-using MiCholoMVC.Models;
+using MiCholoMVC.Services;
 using MiCholoMVC.ViewModels;
-
-namespace MiCholoMVC.Controllers
+namespace MiCholoMVC.Controllers;
+public class VentasController(MiCholoDbContext db, OperacionService operaciones, ILogger<VentasController> logger) : Controller
 {
-    public class VentasController : Controller
+    public async Task<IActionResult> Index() => View(await db.Ventas.Include(v => v.Caja).OrderByDescending(v => v.Fecha).ToListAsync());
+    [HttpGet]
+    public async Task<IActionResult> Crear()
     {
-        private readonly MiCholoDbContext _context;
-
-        public VentasController(MiCholoDbContext context)
-        {
-            _context = context;
-        }
-
-        public async Task<IActionResult> Index()
-        {
-            var ventas = await _context.Ventas
-                .Include(v => v.Caja)
-                .OrderByDescending(v => v.Fecha)
-                .ToListAsync();
-
-            return View(ventas);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> Crear()
-        {
-            var cajaAbierta = await _context.Cajas
-                .FirstOrDefaultAsync(c => c.Estado == "ABIERTA");
-
-            if (cajaAbierta == null)
-            {
-                TempData["Error"] =
-                    "No se puede registrar una venta porque no existe una caja abierta.";
-
-                return RedirectToAction(nameof(Index));
-            }
-
-            var lotes = await _context.Lotes
-                .Include(l => l.Producto)
-                .Where(l =>
-                    l.Estado &&
-                    l.Cantidad > 0)
-                .OrderBy(l => l.Producto.Nombre)
-                .ThenBy(l => l.FechaVencimiento)
-                .ToListAsync();
-
-            ViewBag.Caja = cajaAbierta;
-            ViewBag.Lotes = lotes;
-
-            return View(new VentaCreateViewModel());
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Crear(VentaCreateViewModel modelo)
-        {
-            var cajaAbierta = await _context.Cajas
-                .FirstOrDefaultAsync(c => c.Estado == "ABIERTA");
-
-            if (cajaAbierta == null)
-            {
-                TempData["Error"] =
-                    "No se puede registrar una venta porque no existe una caja abierta.";
-
-                return RedirectToAction(nameof(Index));
-            }
-
-            if (modelo.Detalles == null || modelo.Detalles.Count == 0)
-            {
-                ModelState.AddModelError(
-                    "",
-                    "Debe agregar al menos un producto a la venta.");
-            }
-
-            if (!ModelState.IsValid)
-            {
-                await CargarDatosCrear(modelo, cajaAbierta.IdCaja);
-                return View(modelo);
-            }
-
-            var idsLotes = modelo.Detalles
-                .Select(d => d.IdLote)
-                .ToList();
-
-            if (idsLotes.Count != idsLotes.Distinct().Count())
-            {
-                ModelState.AddModelError(
-                    "",
-                    "No puede agregar el mismo lote más de una vez.");
-
-                await CargarDatosCrear(modelo, cajaAbierta.IdCaja);
-                return View(modelo);
-            }
-
-            var lotes = await _context.Lotes
-                .Include(l => l.Producto)
-                .Where(l => idsLotes.Contains(l.IdLote))
-                .ToListAsync();
-
-            if (lotes.Count != idsLotes.Count)
-            {
-                ModelState.AddModelError(
-                    "",
-                    "Uno o más lotes seleccionados no existen.");
-
-                await CargarDatosCrear(modelo, cajaAbierta.IdCaja);
-                return View(modelo);
-            }
-
-            foreach (var detalle in modelo.Detalles)
-            {
-                var lote = lotes.First(l => l.IdLote == detalle.IdLote);
-
-                if (!lote.Estado)
-                {
-                    ModelState.AddModelError(
-                        "",
-                        $"El lote {lote.NumeroLote} está inactivo.");
-
-                    continue;
-                }
-
-                if (lote.FechaVencimiento <= DateTime.Today)
-                {
-                    ModelState.AddModelError(
-                        "",
-                        $"El lote {lote.NumeroLote} está vencido y no puede venderse.");
-
-                    continue;
-                }
-
-                if (detalle.Cantidad <= 0)
-                {
-                    ModelState.AddModelError(
-                        "",
-                        $"La cantidad del lote {lote.NumeroLote} debe ser mayor que 0.");
-
-                    continue;
-                }
-
-                if (detalle.Cantidad > lote.Cantidad)
-                {
-                    ModelState.AddModelError(
-                        "",
-                        $"El lote {lote.NumeroLote} solo tiene {lote.Cantidad} unidades disponibles.");
-
-                    continue;
-                }
-            }
-
-            if (!ModelState.IsValid)
-            {
-                await CargarDatosCrear(modelo, cajaAbierta.IdCaja);
-                return View(modelo);
-            }
-
-            using var transaction =
-                await _context.Database.BeginTransactionAsync();
-
-            try
-            {
-                var venta = new Venta
-                {
-                    IdCaja = cajaAbierta.IdCaja,
-                    Fecha = DateTime.Now,
-                    Total = 0,
-                    MetodoPago = modelo.MetodoPago
-                };
-
-                _context.Ventas.Add(venta);
-
-                await _context.SaveChangesAsync();
-
-                decimal totalVenta = 0;
-
-                foreach (var detalle in modelo.Detalles)
-                {
-                    var lote = lotes.First(l => l.IdLote == detalle.IdLote);
-
-                    decimal precioUnitario =
-                        lote.Producto.PrecioVenta;
-
-                    decimal subtotal =
-                        precioUnitario * detalle.Cantidad;
-
-                    var detalleVenta = new DetalleVenta
-                    {
-                        IdVenta = venta.IdVenta,
-                        IdLote = lote.IdLote,
-                        Cantidad = detalle.Cantidad,
-                        PrecioUnitario = precioUnitario,
-                        Subtotal = subtotal
-                    };
-
-                    _context.DetalleVentas.Add(detalleVenta);
-
-                    lote.Cantidad -= detalle.Cantidad;
-
-                    totalVenta += subtotal;
-                }
-
-                venta.Total = totalVenta;
-
-                var movimientoCaja = new MovimientoCaja
-                {
-                    IdCaja = cajaAbierta.IdCaja,
-                    Tipo = "INGRESO",
-                    Monto = totalVenta,
-                    Descripcion = $"Venta #{venta.IdVenta}",
-                    Fecha = DateTime.Now
-                };
-
-                _context.MovimientosCaja.Add(movimientoCaja);
-
-                await _context.SaveChangesAsync();
-
-                await transaction.CommitAsync();
-
-                TempData["Mensaje"] =
-                    $"Venta #{venta.IdVenta} registrada correctamente. Total: S/ {totalVenta:F2}.";
-
-                return RedirectToAction(
-                    nameof(Detalle),
-                    new { id = venta.IdVenta });
-            }
-            catch
-            {
-                await transaction.RollbackAsync();
-
-                ModelState.AddModelError(
-                    "",
-                    "Ocurrió un error al registrar la venta.");
-
-                await CargarDatosCrear(modelo, cajaAbierta.IdCaja);
-
-                return View(modelo);
-            }
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> Detalle(int id)
-        {
-            var venta = await _context.Ventas
-                .Include(v => v.Caja)
-                .FirstOrDefaultAsync(v => v.IdVenta == id);
-
-            if (venta == null)
-            {
-                return NotFound();
-            }
-
-            var detalles = await _context.DetalleVentas
-                .Where(d => d.IdVenta == id)
-                .Join(
-                    _context.Lotes,
-                    d => d.IdLote,
-                    l => l.IdLote,
-                    (d, l) => new
-                    {
-                        d.IdDetalleVenta,
-                        d.IdLote,
-                        d.Cantidad,
-                        d.PrecioUnitario,
-                        d.Subtotal,
-                        l.NumeroLote,
-                        l.FechaVencimiento,
-                        l.IdProducto
-                    })
-                .Join(
-                    _context.Productos,
-                    d => d.IdProducto,
-                    p => p.IdProducto,
-                    (d, p) => new
-                    {
-                        d.IdDetalleVenta,
-                        d.IdLote,
-                        d.Cantidad,
-                        d.PrecioUnitario,
-                        d.Subtotal,
-                        d.NumeroLote,
-                        d.FechaVencimiento,
-                        Producto = p.Nombre
-                    })
-                .ToListAsync();
-
-            ViewBag.Detalles = detalles;
-
-            return View(venta);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> ObtenerLotes()
-        {
-            var lotes = await _context.Lotes
-                .Include(l => l.Producto)
-                .Where(l =>
-                    l.Estado &&
-                    l.Cantidad > 0 &&
-                    l.FechaVencimiento > DateTime.Today)
-                .OrderBy(l => l.Producto.Nombre)
-                .ThenBy(l => l.FechaVencimiento)
-                .Select(l => new
-                {
-                    idLote = l.IdLote,
-                    producto = l.Producto.Nombre,
-                    numeroLote = l.NumeroLote,
-                    stock = l.Cantidad,
-                    precio = l.Producto.PrecioVenta,
-                    fechaVencimiento =
-                        l.FechaVencimiento.ToString("yyyy-MM-dd")
-                })
-                .ToListAsync();
-
-            return Json(lotes);
-        }
-
-        private async Task CargarDatosCrear(
-            VentaCreateViewModel modelo,
-            int idCaja)
-        {
-            var caja = await _context.Cajas
-                .FirstOrDefaultAsync(c => c.IdCaja == idCaja);
-
-            var lotes = await _context.Lotes
-                .Include(l => l.Producto)
-                .Where(l =>
-                    l.Estado &&
-                    l.Cantidad > 0)
-                .OrderBy(l => l.Producto.Nombre)
-                .ThenBy(l => l.FechaVencimiento)
-                .ToListAsync();
-
-            ViewBag.Caja = caja;
-            ViewBag.Lotes = lotes;
-        }
+        if (!await db.Cajas.AnyAsync(c => c.Estado == "ABIERTA")) { TempData["Error"] = "Abra una caja antes de registrar ventas."; return RedirectToAction("Index", "Cajas"); }
+        return View(new VentaCreateViewModel());
+    }
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> Crear(VentaCreateViewModel modelo)
+    {
+        if (!ModelState.IsValid) return View(modelo);
+        try { return RedirectToAction(nameof(Detalle), new { id = await operaciones.VenderAsync(modelo) }); }
+        catch (InvalidOperationException ex) { ModelState.AddModelError("", ex.Message); }
+        catch (Exception ex) { logger.LogError(ex, "No se pudo registrar la venta"); ModelState.AddModelError("", "No se pudo registrar la venta. Revise la disponibilidad e intente nuevamente."); }
+        db.ChangeTracker.Clear(); return View(modelo);
+    }
+    public async Task<IActionResult> ObtenerProductos(string? q)
+    {
+        var productos = db.Productos.Where(p => p.Estado);
+        if (!string.IsNullOrWhiteSpace(q)) productos = productos.Where(p => p.Nombre.Contains(q));
+        return Json(await productos.OrderBy(p => p.Nombre).Select(p => new { idProducto = p.IdProducto, nombre = p.Nombre, precio = p.PrecioVenta,
+            stock = db.Lotes.Where(l => l.IdProducto == p.IdProducto && l.Estado && l.FechaVencimiento >= ReglasNegocio.Hoy).Sum(l => (int?)l.Cantidad) ?? 0 }).ToListAsync());
+    }
+    public async Task<IActionResult> Detalle(int id)
+    {
+        var venta = await db.Ventas.Include(v => v.Caja).Include(v => v.Detalles!).ThenInclude(d => d.Lote).SingleOrDefaultAsync(v => v.IdVenta == id);
+        return venta == null ? NotFound() : View(venta);
+    }
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> Anular(int id, string motivo, bool reponer)
+    {
+        try { await operaciones.AnularAsync(id, motivo, reponer); TempData["Mensaje"] = "Devolución registrada. Para pagos digitales, efectúe el reintegro por el medio de pago original."; }
+        catch (InvalidOperationException ex) { TempData["Error"] = ex.Message; }
+        catch (Exception ex) { logger.LogError(ex, "Error al devolver venta {Id}", id); TempData["Error"] = "No se pudo registrar la devolución. Intente nuevamente."; }
+        return RedirectToAction(nameof(Detalle), new { id });
+    }
+    public async Task<IActionResult> Comprobante(int id)
+    {
+        var venta = await db.Ventas.Include(v => v.Detalles).SingleOrDefaultAsync(v => v.IdVenta == id);
+        if (venta == null) return NotFound();
+        var lineas = new List<string> { $"Comprobante interno #{venta.IdVenta:D6}", $"Fecha: {venta.Fecha:dd/MM/yyyy HH:mm} | Estado: {venta.Estado}", " " };
+        lineas.AddRange(venta.Detalles!.GroupBy(d => new { d.ProductoNombre, d.PrecioUnitario }).Select(g => $"{g.Key.ProductoNombre} | {g.Sum(d => d.Cantidad)} x S/ {g.Key.PrecioUnitario:F2} | S/ {g.Sum(d => d.Subtotal):F2}"));
+        lineas.AddRange([$"Total: S/ {venta.Total:F2}", $"Pago: {venta.MetodoPago}", $"Recibido: S/ {venta.DineroRecibido:F2} | Vuelto: S/ {venta.Vuelto:F2}", "Documento de control interno del minimarket."]);
+        return File(PdfService.Crear("Mi Cholo - Comprobante", lineas), "application/pdf", $"venta-{id:D6}.pdf");
     }
 }

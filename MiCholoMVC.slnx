@@ -3,4 +3,5 @@
     <File Path=".editorconfig" />
   </Folder>
   <Project Path="MiCholoMVC/MiCholoMVC.csproj" />
+  <Project Path="MiCholoMVC.Pruebas/MiCholoMVC.Pruebas.csproj" />
 </Solution>

@@ -25,6 +25,16 @@ namespace MiCholoMVC.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<Venta>().HasIndex(v => v.TokenOperacion).IsUnique();
+            modelBuilder.Entity<Caja>().HasIndex(c => c.Estado).IsUnique().HasFilter("[Estado] = N'ABIERTA'");
+            modelBuilder.Entity<Venta>().Property(v => v.DineroRecibido).HasPrecision(10, 2);
+            modelBuilder.Entity<Venta>().Property(v => v.Vuelto).HasPrecision(10, 2);
+            modelBuilder.Entity<Lote>().Property(l => l.CostoUnitario).HasPrecision(10, 2);
+            modelBuilder.Entity<Perdida>().Property(p => p.ValorUnitario).HasPrecision(10, 2);
+            modelBuilder.Entity<DetalleVenta>().Property(d => d.CostoUnitario).HasPrecision(10, 2);
+            modelBuilder.Entity<Caja>().Property(c => c.EfectivoContado).HasPrecision(10, 2);
+            modelBuilder.Entity<Caja>().Property(c => c.Diferencia).HasPrecision(10, 2);
+            modelBuilder.Entity<MovimientoInventario>().Property(m => m.ValorUnitario).HasPrecision(10, 2);
 
             modelBuilder.Entity<Producto>()
                 .HasOne(p => p.Categoria)

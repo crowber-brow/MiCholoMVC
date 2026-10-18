@@ -1,105 +1,11 @@
-﻿@model MiCholoMVC.Models.Caja
-
-@{
-    ViewData["Title"] = "Cerrar Caja";
-
-    decimal saldoFinal = ViewBag.SaldoFinal ?? 0;
-}
-
-<div class="container mt-4">
-
-    <div class="row justify-content-center">
-
-        <div class="col-md-7">
-
-            <div class="card">
-
-                <div class="card-header bg-danger text-white">
-                    <h4 class="mb-0">
-                        Cerrar Caja
-                    </h4>
-                </div>
-
-                <div class="card-body">
-
-                    <h5>
-                        @Model.Nombre
-                    </h5>
-
-                    <hr />
-
-                    <div class="mb-3">
-
-                        <strong>
-                            Estado actual:
-                        </strong>
-
-                        <span class="badge bg-success">
-                            @Model.Estado
-                        </span>
-
-                    </div>
-
-                    <div class="mb-3">
-
-                        <strong>
-                            Monto inicial:
-                        </strong>
-
-                        <span>
-                            S/ @Model.MontoInicial.ToString("F2")
-                        </span>
-
-                    </div>
-
-                    <div class="mb-3">
-
-                        <strong>
-                            Monto de cierre:
-                        </strong>
-
-                        <span>
-                            S/ @saldoFinal.ToString("F2")
-                        </span>
-
-                    </div>
-
-                    <div class="alert alert-warning">
-
-                        <strong>Atención:</strong>
-
-                        Al cerrar la caja ya no se podrán registrar
-                        nuevos movimientos en ella.
-
-                    </div>
-
-                    <form asp-action="CerrarPost"
-                          method="post">
-
-                        @Html.AntiForgeryToken()
-
-                        <input type="hidden"
-                               name="id"
-                               value="@Model.IdCaja" />
-
-                        <button type="submit"
-                                class="btn btn-danger">
-                            Confirmar cierre
-                        </button>
-
-                        <a asp-action="Index"
-                           class="btn btn-secondary">
-                            Cancelar
-                        </a>
-
-                    </form>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
+@model MiCholoMVC.Models.Caja
+@{ViewData["Title"]="Cerrar caja";decimal saldo=ViewBag.SaldoFinal??0;}
+<h2>Cierre de caja: @Model.Nombre</h2>
+@if(TempData["Error"]!=null){<div class="alert alert-danger">@TempData["Error"]</div>}
+<div class="card p-4"><p>Monto inicial: S/ @Model.MontoInicial.ToString("F2")</p><h4>Efectivo esperado: S/ @saldo.ToString("F2")</h4><p>Los cobros digitales se muestran aparte y no forman parte del efectivo.</p>
+<table class="table"><thead><tr><th>Método de pago</th><th>Ventas vigentes</th><th>Total</th></tr></thead><tbody>@foreach(var r in (List<MiCholoMVC.ViewModels.VentaMetodoPagoViewModel>)ViewBag.Resumen){<tr><td>@r.MetodoPago</td><td>@r.Cantidad</td><td>S/ @r.Total.ToString("F2")</td></tr>}</tbody></table>
+@if(Model.Estado=="ABIERTA"){
+<form asp-action="CerrarPost" method="post" onsubmit="return confirm('¿Confirmar el cierre de caja?');"><input type="hidden" name="id" value="@Model.IdCaja"/><label for="contado" class="form-label">Efectivo contado (S/)</label><input id="contado" name="efectivoContado" type="number" min="0" step="0.01" required class="form-control"/><p id="diferencia" class="mt-3"></p><button class="btn btn-danger">Confirmar cierre</button><a asp-action="Index" class="btn btn-secondary">Volver</a></form>
+}else{<p>Contado: S/ @Model.EfectivoContado?.ToString("F2") · Diferencia: S/ @Model.Diferencia?.ToString("F2")</p><a asp-action="Index" class="btn btn-secondary">Volver</a>}
 </div>
+@section Scripts{<script>const input=document.getElementById('contado');if(input)input.addEventListener('input',()=>{const diferencia=Number(input.value)-@saldo.ToString(System.Globalization.CultureInfo.InvariantCulture);document.getElementById('diferencia').textContent='Diferencia: S/ '+diferencia.toFixed(2)+(diferencia<0?' (faltante)':diferencia>0?' (sobrante)':' (cuadra)');});</script>}

@@ -5,3 +5,10 @@ obj/
 *.suo
 *.userosscache
 *.sln.docstates
+
+# Mi Cholo: configuración privada, resultados y respaldos
+**/App_Data/
+**/TestResults/
+tmp/
+output/
+*.bak

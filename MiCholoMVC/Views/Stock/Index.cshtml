@@ -1,4 +1,4 @@
-﻿@model IEnumerable<MiCholoMVC.ViewModels.StockProductoViewModel>
+@model IEnumerable<MiCholoMVC.ViewModels.StockProductoViewModel>
 
 @{
     ViewData["Title"] = "Control de Stock";
@@ -24,7 +24,9 @@
 
                         <tr>
                             <th>Producto</th>
-                            <th>Stock actual</th>
+                            <th>Disponible para vender</th>
+                            <th>Stock físico</th>
+                            <th>Vencido</th>
                             <th>Stock mínimo</th>
                             <th>Estado</th>
                         </tr>
@@ -43,7 +45,7 @@
 
                                 <td>
                                     @item.StockActual
-                                </td>
+                                </td><td>@item.StockFisico</td><td>@item.StockVencido</td>
 
                                 <td>
                                     @item.StockMinimo

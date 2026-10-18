@@ -1,180 +1,49 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using MiCholoMVC.Data;
 using MiCholoMVC.Models;
 using MiCholoMVC.Services;
 using MiCholoMVC.ViewModels;
-
-namespace MiCholoMVC.Controllers
+namespace MiCholoMVC.Controllers;
+public class PerdidasController(MiCholoDbContext db, OperacionService operaciones, ILogger<PerdidasController> logger) : Controller
 {
-    public class PerdidasController : Controller
+    public async Task<IActionResult> Index(int? idProducto, string? motivo, DateTime? desde, DateTime? hasta)
     {
-        private readonly IPerdidaService _service;
-        private readonly MiCholoDbContext _context;
-
-        public PerdidasController(
-            IPerdidaService service,
-            MiCholoDbContext context)
+        var query=db.Perdidas.Include(p=>p.Lote!).ThenInclude(l=>l.Producto).AsQueryable();
+        if(idProducto.HasValue) query=query.Where(p=>p.Lote!.IdProducto==idProducto);
+        if(!string.IsNullOrWhiteSpace(motivo)) query=query.Where(p=>p.Motivo==motivo);
+        if(desde.HasValue) query=query.Where(p=>p.Fecha>=desde.Value.Date);
+        if(hasta.HasValue) query=query.Where(p=>p.Fecha<hasta.Value.Date.AddDays(1));
+        await Cargar(idProducto); ViewBag.Motivo=motivo; ViewBag.Desde=desde; ViewBag.Hasta=hasta;
+        return View(await query.OrderByDescending(p=>p.Fecha).ToListAsync());
+    }
+    [HttpGet] public async Task<IActionResult> Create() { await Cargar();return View(); }
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(PerdidaCreateViewModel modelo)
+    {
+        if(!ReglasNegocio.MotivosPerdida.Contains(modelo.Motivo)) ModelState.AddModelError("Motivo","Seleccione un motivo válido.");
+        if(string.IsNullOrWhiteSpace(modelo.Justificacion)) ModelState.AddModelError("Justificacion","La justificación es obligatoria.");
+        if(ModelState.IsValid) try
         {
-            _service = service;
-            _context = context;
+            await using var tx=await operaciones.IniciarAsync();
+            var lote=await db.Lotes.SingleOrDefaultAsync(l=>l.IdLote==modelo.IdLote&&l.Estado)??throw new InvalidOperationException("El lote no existe o está inactivo.");
+            if(lote.IdProducto!=modelo.IdProducto) throw new InvalidOperationException("El lote no pertenece al producto seleccionado.");
+            ReglasNegocio.ValidarCantidad(modelo.Cantidad,lote.Cantidad);
+            lote.Cantidad-=modelo.Cantidad;
+            var perdida=new Perdida {IdLote=lote.IdLote,Cantidad=modelo.Cantidad,Motivo=modelo.Motivo,Justificacion=modelo.Justificacion.Trim(),Fecha=ReglasNegocio.Ahora,ValorUnitario=lote.CostoUnitario};
+            db.Perdidas.Add(perdida); await db.SaveChangesAsync();
+            await operaciones.MovimientoAsync(lote,"PERDIDA",modelo.Cantidad,$"Pérdida #{perdida.IdPerdida}: {modelo.Motivo}");
+            await db.SaveChangesAsync();await tx.CommitAsync();TempData["Mensaje"]="Pérdida registrada y stock actualizado.";return RedirectToAction(nameof(Index));
         }
-
-        public async Task<IActionResult> Index()
-        {
-            var perdidas =
-                await _service.ObtenerTodosAsync();
-
-            return View(perdidas);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> Create()
-        {
-            await CargarProductos();
-
-            return View();
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(
-            PerdidaCreateViewModel modelo)
-        {
-            if (modelo.Cantidad <= 0)
-            {
-                ModelState.AddModelError(
-                    "Cantidad",
-                    "La cantidad debe ser mayor que 0.");
-            }
-
-            if (string.IsNullOrWhiteSpace(modelo.Justificacion))
-            {
-                ModelState.AddModelError(
-                    "Justificacion",
-                    "La justificación es obligatoria.");
-            }
-
-            var lote = await _context.Lotes
-                .FirstOrDefaultAsync(
-                    l => l.IdLote == modelo.IdLote);
-
-            if (lote == null)
-            {
-                ModelState.AddModelError(
-                    "IdLote",
-                    "El lote seleccionado no existe.");
-            }
-            else
-            {
-                if (lote.IdProducto != modelo.IdProducto)
-                {
-                    ModelState.AddModelError(
-                        "IdLote",
-                        "El lote no pertenece al producto seleccionado.");
-                }
-
-                if (modelo.Cantidad > lote.Cantidad)
-                {
-                    ModelState.AddModelError(
-                        "Cantidad",
-                        "La cantidad perdida no puede ser mayor al stock disponible.");
-                }
-            }
-
-            if (!ModelState.IsValid)
-            {
-                await CargarProductos(
-                    modelo.IdProducto);
-
-                await CargarLotes(
-                    modelo.IdProducto,
-                    modelo.IdLote);
-
-                return View(modelo);
-            }
-
-            lote!.Cantidad -= modelo.Cantidad;
-
-            var perdida = new Perdida
-            {
-                IdLote = modelo.IdLote!.Value,
-                Cantidad = modelo.Cantidad,
-                Motivo = modelo.Motivo,
-                Justificacion = modelo.Justificacion.Trim(),
-                Fecha = DateTime.Now
-            };
-
-            _context.Perdidas.Add(perdida);
-
-            await _context.SaveChangesAsync();
-
-            return RedirectToAction(nameof(Index));
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> ObtenerLotesPorProducto(
-            int idProducto)
-        {
-            var lotes = await _context.Lotes
-                .Where(l =>
-                    l.IdProducto == idProducto &&
-                    l.Estado)
-                .OrderBy(l => l.FechaVencimiento)
-                .Select(l => new
-                {
-                    id = l.IdLote,
-                    numero = l.NumeroLote,
-                    cantidad = l.Cantidad,
-                    vencimiento = l.FechaVencimiento
-                })
-                .ToListAsync();
-
-            return Json(lotes);
-        }
-
-        private async Task CargarProductos(
-            int? productoSeleccionado = null)
-        {
-            var productos = await _context.Productos
-                .Where(p => p.Estado)
-                .OrderBy(p => p.Nombre)
-                .ToListAsync();
-
-            ViewBag.Productos = new SelectList(
-                productos,
-                "IdProducto",
-                "Nombre",
-                productoSeleccionado);
-        }
-
-        private async Task CargarLotes(
-            int? productoId,
-            int? loteSeleccionado = null)
-        {
-            if (productoId == null)
-            {
-                ViewBag.Lotes = new SelectList(
-                    new List<Lote>(),
-                    "IdLote",
-                    "NumeroLote");
-
-                return;
-            }
-
-            var lotes = await _context.Lotes
-                .Where(l =>
-                    l.IdProducto == productoId &&
-                    l.Estado)
-                .OrderBy(l => l.FechaVencimiento)
-                .ToListAsync();
-
-            ViewBag.Lotes = new SelectList(
-                lotes,
-                "IdLote",
-                "NumeroLote",
-                loteSeleccionado);
-        }
+        catch(InvalidOperationException ex){ModelState.AddModelError("",ex.Message);}
+        catch(Exception ex){logger.LogError(ex,"Error registrando pérdida");ModelState.AddModelError("","No se pudo registrar. Intente nuevamente.");}
+        db.ChangeTracker.Clear();await Cargar(modelo.IdProducto,modelo.IdLote);return View(modelo);
+    }
+    public async Task<IActionResult> ObtenerLotesPorProducto(int idProducto)=>Json(await db.Lotes.Where(l=>l.IdProducto==idProducto&&l.Estado&&l.Cantidad>0).OrderBy(l=>l.FechaVencimiento).Select(l=>new{id=l.IdLote,numero=l.NumeroLote,cantidad=l.Cantidad,vencimiento=l.FechaVencimiento,costo=l.CostoUnitario}).ToListAsync());
+    private async Task Cargar(int? producto=null,int? lote=null)
+    {
+        ViewBag.Productos=new SelectList(await db.Productos.OrderBy(p=>p.Nombre).ToListAsync(),"IdProducto","Nombre",producto);
+        ViewBag.Lotes=new SelectList(await db.Lotes.Where(l=>l.IdProducto==producto&&l.Estado&&l.Cantidad>0).ToListAsync(),"IdLote","NumeroLote",lote);
     }
 }
