@@ -3,5 +3,8 @@
     <File Path=".editorconfig" />
   </Folder>
   <Project Path="MiCholoMVC/MiCholoMVC.csproj" />
+  <Project Path="docker-compose.dcproj">
+    <Build />
+  </Project>
   <Project Path="MiCholoMVC.Pruebas/MiCholoMVC.Pruebas.csproj" />
 </Solution>

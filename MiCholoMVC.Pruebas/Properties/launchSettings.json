@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "MiCholoMVC.Pruebas": {
+      "commandName": "Project"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
+    }
+  }
+}

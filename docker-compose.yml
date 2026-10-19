@@ -1,0 +1,6 @@
+services:
+  micholomvc.pruebas:
+    image: ${DOCKER_REGISTRY-}micholomvcpruebas
+    build:
+      context: .
+      dockerfile: MiCholoMVC.Pruebas/Dockerfile
