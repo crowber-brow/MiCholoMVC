@@ -13,7 +13,7 @@ builder.Services.AddScoped<OperacionService>();
 builder.Services.AddSingleton<AccesoService>();
 
 builder.Services.AddDbContext<MiCholoDbContext>(options =>
-    options.UseSqlServer(
+    options.UseNpgsql(
         builder.Configuration.GetConnectionString("MiCholoConnection")));
 
 builder.Services.AddScoped<ICategoriaRepository, CategoriaRepository>();

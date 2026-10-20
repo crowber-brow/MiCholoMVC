@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MiCholoMVC.Migrations
 {
     [DbContext(typeof(MiCholoDbContext))]
-    [Migration("20261019145425_mig v1")]
-    partial class migv1
+    [Migration("20261020115526_InitialPostgres")]
+    partial class InitialPostgres
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
