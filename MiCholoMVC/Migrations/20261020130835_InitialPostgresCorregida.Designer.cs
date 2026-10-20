@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MiCholoMVC.Migrations
 {
     [DbContext(typeof(MiCholoDbContext))]
-    [Migration("20261020125841_ActualizacionModelos")]
-    partial class ActualizacionModelos
+    [Migration("20261020130835_InitialPostgresCorregida")]
+    partial class InitialPostgresCorregida
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -67,7 +67,7 @@ namespace MiCholoMVC.Migrations
 
                     b.HasIndex("Estado")
                         .IsUnique()
-                        .HasFilter("[Estado] = N'ABIERTA'");
+                        .HasFilter("\"Estado\" = 'ABIERTA'");
 
                     b.ToTable("Cajas");
                 });

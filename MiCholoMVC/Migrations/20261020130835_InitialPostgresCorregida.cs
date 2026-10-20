@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MiCholoMVC.Migrations
 {
     /// <inheritdoc />
-    public partial class ActualizacionModelos : Migration
+    public partial class InitialPostgresCorregida : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -269,7 +269,7 @@ namespace MiCholoMVC.Migrations
                 table: "Cajas",
                 column: "Estado",
                 unique: true,
-                filter: "[Estado] = N'ABIERTA'");
+                filter: "\"Estado\" = 'ABIERTA'");
 
             migrationBuilder.CreateIndex(
                 name: "IX_DetalleVentas_IdLote",

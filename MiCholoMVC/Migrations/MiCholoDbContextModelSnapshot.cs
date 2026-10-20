@@ -64,7 +64,7 @@ namespace MiCholoMVC.Migrations
 
                     b.HasIndex("Estado")
                         .IsUnique()
-                        .HasFilter("[Estado] = N'ABIERTA'");
+                        .HasFilter("\"Estado\" = 'ABIERTA'");
 
                     b.ToTable("Cajas");
                 });

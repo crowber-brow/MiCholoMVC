@@ -26,7 +26,7 @@ namespace MiCholoMVC.Data
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<Venta>().HasIndex(v => v.TokenOperacion).IsUnique();
-            modelBuilder.Entity<Caja>().HasIndex(c => c.Estado).IsUnique().HasFilter("[Estado] = N'ABIERTA'");
+            modelBuilder.Entity<Caja>().HasIndex(c => c.Estado).IsUnique().HasFilter("\"Estado\" = 'ABIERTA'");
             modelBuilder.Entity<Venta>().Property(v => v.DineroRecibido).HasPrecision(10, 2);
             modelBuilder.Entity<Venta>().Property(v => v.Vuelto).HasPrecision(10, 2);
             modelBuilder.Entity<Lote>().Property(l => l.CostoUnitario).HasPrecision(10, 2);
