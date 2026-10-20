@@ -7,6 +7,8 @@ using Microsoft.EntityFrameworkCore;
 using MiCholoMVC.Data;
 using MiCholoMVC.Repositories;
 using MiCholoMVC.Services;
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddScoped<OperacionService>();
