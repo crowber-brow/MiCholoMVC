@@ -1,6 +1,37 @@
 services:
-  micholomvc:
-    image: ${DOCKER_REGISTRY-}micholomvc
+  micholo-db:
+    image: postgres:15-alpine
+    container_name: micholomvc_postgres
+    environment:
+      - POSTGRES_USER=micholo_user
+      - POSTGRES_PASSWORD=MicholoSecurePass2026!
+      - POSTGRES_DB=micholo_railway_local
+    ports:
+      - "54321:5432"
+    volumes:
+      - micholo_postgres_data:/var/lib/postgresql/data
+    networks:
+      - micholo-network
+
+  micholo-web:
+    image: micholomvc-web-app
+    container_name: micholomvc_web_container
     build:
       context: .
       dockerfile: MiCholoMVC/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__MiCholoConnection=Host=micholo-db;Port=5432;Database=micholo_railway_local;Username=micholo_user;Password=MicholoSecurePass2026!
+    ports:
+      - "8020:8080"
+    depends_on:
+      - micholo-db
+    networks:
+      - micholo-network
+
+volumes:
+  micholo_postgres_data:
+
+networks:
+  micholo-network:
+    driver: bridge

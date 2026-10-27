@@ -44,10 +44,10 @@ namespace MiCholoMVC.Migrations
                         .HasColumnType("character varying(20)");
 
                     b.Property<DateTime?>("FechaApertura")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("FechaCierre")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<decimal?>("MontoCierre")
                         .HasColumnType("decimal(10,2)");
@@ -162,10 +162,10 @@ namespace MiCholoMVC.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<DateTime>("FechaIngreso")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime>("FechaVencimiento")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("IdProducto")
                         .HasColumnType("integer");
@@ -195,7 +195,7 @@ namespace MiCholoMVC.Migrations
                         .HasColumnType("character varying(250)");
 
                     b.Property<DateTime>("Fecha")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("IdCaja")
                         .HasColumnType("integer");
@@ -231,7 +231,7 @@ namespace MiCholoMVC.Migrations
                         .HasColumnType("character varying(250)");
 
                     b.Property<DateTime>("Fecha")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("IdLote")
                         .HasColumnType("integer");
@@ -275,7 +275,7 @@ namespace MiCholoMVC.Migrations
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("Fecha")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("IdLote")
                         .HasColumnType("integer");
@@ -317,7 +317,7 @@ namespace MiCholoMVC.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<DateTime>("FechaRegistro")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("IdCategoria")
                         .HasColumnType("integer");
@@ -399,10 +399,10 @@ namespace MiCholoMVC.Migrations
                         .HasColumnType("character varying(20)");
 
                     b.Property<DateTime>("Fecha")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("FechaAnulacion")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("IdCaja")
                         .HasColumnType("integer");
