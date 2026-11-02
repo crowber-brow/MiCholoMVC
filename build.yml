@@ -1,0 +1,40 @@
+
+name: SonarQube Cloud
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build and analyze
+    runs-on: windows-latest
+
+    steps:
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: zulu
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install SonarScanner for .NET
+        shell: powershell
+        run: dotnet tool update dotnet-sonarscanner --global
+
+      - name: Build and analyze
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        shell: powershell
+        run: |
+          dotnet sonarscanner begin /k:"crowber-brow_MiCholoMVC" /o:"crowber-brow" /d:sonar.token="$env:SONAR_TOKEN"
+          dotnet build MiCholoMVC.slnx
+          dotnet sonarscanner end /d:sonar.token="$env:SONAR_TOKEN"
