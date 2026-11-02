@@ -1,9 +1,102 @@
+
 @model IEnumerable<MiCholoMVC.Models.MovimientoInventario>
-@{ViewData["Title"]="Kardex por producto";}
-<div class="d-flex justify-content-between mb-3"><h2>Kardex e inventario</h2><a asp-action="Create" class="btn btn-primary">Nuevo movimiento</a></div>
-@if(TempData["Mensaje"]!=null){<div class="alert alert-success">@TempData["Mensaje"]</div>}
-<p class="text-muted">Entradas, ventas, pérdidas y devoluciones. @(ViewBag.Inicio != null ? "Historial completo desde la activación: " + ((DateTime)ViewBag.Inicio).ToString("dd/MM/yyyy HH:mm") : "")</p>
-<form class="row g-2 mb-3"><div class="col-md-5"><label>Producto</label><select name="idProducto" asp-items="ViewBag.Productos" class="form-select"><option value="">Todos</option></select></div><div class="col-md-3"><label>Desde</label><input type="date" name="desde" value="@(((DateTime?)ViewBag.Desde)?.ToString("yyyy-MM-dd"))" class="form-control"/></div><div class="col-md-3"><label>Hasta</label><input type="date" name="hasta" value="@(((DateTime?)ViewBag.Hasta)?.ToString("yyyy-MM-dd"))" class="form-control"/></div><div class="col-md-1 align-self-end"><button class="btn btn-primary">Filtrar</button></div></form>
-<div class="card p-3 table-responsive"><table class="table table-striped"><thead><tr><th>Fecha</th><th>Producto / lote</th><th>Tipo</th><th>Unidades</th><th>Saldo lote</th><th>Saldo producto</th><th>Costo unit.</th><th>Referencia</th></tr></thead><tbody>
-@foreach(var m in Model){<tr><td>@m.Fecha.ToString("dd/MM/yyyy HH:mm")</td><td>@m.Producto?.Nombre / @m.Lote?.NumeroLote</td><td>@m.Tipo</td><td>@m.Cantidad</td><td>@m.SaldoLote</td><td>@m.SaldoProducto</td><td>S/ @m.ValorUnitario.ToString("F2")</td><td>@m.Descripcion</td></tr>}
-</tbody></table>@if(!Model.Any()){<p>No hay movimientos para estos filtros.</p>}</div>
+
+@{
+    ViewData["Title"] = "Kardex por producto";
+}
+
+<div class="d-flex justify-content-between mb-3">
+    <h2>Kardex e inventario</h2>
+    <a asp-action="Create" class="btn btn-primary">Nuevo movimiento</a>
+</div>
+
+@if (TempData["Mensaje"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Mensaje"]
+    </div>
+}
+
+<p class="text-muted">
+    Entradas, ventas, pérdidas y devoluciones.
+    @(ViewBag.Inicio != null
+        ? "Historial completo desde la activación: " +
+          ((DateTime)ViewBag.Inicio).ToString("dd/MM/yyyy HH:mm")
+        : "")
+</p>
+
+<form class="row g-2 mb-3">
+
+    <div class="col-md-5">
+        <label for="idProducto" class="form-label">Producto</label>
+        <select id="idProducto"
+                name="idProducto"
+                asp-items="ViewBag.Productos"
+                class="form-select">
+            <option value="">Todos</option>
+        </select>
+    </div>
+
+    <div class="col-md-3">
+        <label for="desde" class="form-label">Desde</label>
+        <input type="date"
+               id="desde"
+               name="desde"
+               value="@(((DateTime?)ViewBag.Desde)?.ToString("yyyy-MM-dd"))"
+               class="form-control" />
+    </div>
+
+    <div class="col-md-3">
+        <label for="hasta" class="form-label">Hasta</label>
+        <input type="date"
+               id="hasta"
+               name="hasta"
+               value="@(((DateTime?)ViewBag.Hasta)?.ToString("yyyy-MM-dd"))"
+               class="form-control" />
+    </div>
+
+    <div class="col-md-1 align-self-end">
+        <button type="submit" class="btn btn-primary">Filtrar</button>
+    </div>
+
+</form>
+
+<div class="card p-3 table-responsive">
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Producto / lote</th>
+                <th>Tipo</th>
+                <th>Unidades</th>
+                <th>Saldo lote</th>
+                <th>Saldo producto</th>
+                <th>Costo unit.</th>
+                <th>Referencia</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var m in Model)
+            {
+                <tr>
+                    <td>@m.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@m.Producto?.Nombre / @m.Lote?.NumeroLote</td>
+                    <td>@m.Tipo</td>
+                    <td>@m.Cantidad</td>
+                    <td>@m.SaldoLote</td>
+                    <td>@m.SaldoProducto</td>
+                    <td>S/ @m.ValorUnitario.ToString("F2")</td>
+                    <td>@m.Descripcion</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @if (!Model.Any())
+    {
+        <p>No hay movimientos para estos filtros.</p>
+    }
+
+</div>
