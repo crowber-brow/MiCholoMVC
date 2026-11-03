@@ -12,6 +12,7 @@ using MiCholoMVC.Models;
 using MiCholoMVC.Services;
 using MiCholoMVC.ViewModels;
 using MiCholoMVC.Pruebas.Soporte;
+using static MiCholoMVC.Pruebas.Soporte.DatosPrueba;
 
 if (args.Contains("--esquema"))
 {
@@ -42,14 +43,9 @@ if (args.Contains("--pdf"))
                 "Registros: 60 | Unidades: 120 | Valor perdido: S/ 240.00",
                 "Producto: Café, azúcar y lácteos"
             }.Concat(
-                Enumerable.Range(1, 60).SelectMany(i => new[]
-                {
-                    $"Registro {i}",
-                    "Producto: Leche descremada presentación familiar de larga duración",
-                    "Lote: L-2026-001 | Motivo: VENCIMIENTO",
-                    "Cantidad: 2 | Costo unitario: S/ 2.00 | Valor perdido: S/ 4.00",
-                    " "
-                }))));
+                Enumerable.Range(1, 60).SelectMany(i =>
+                    Enumerable.Repeat($"Registro {i}", 1)
+                        .Concat(PdfDetalleFijo))));
 
     Console.WriteLine("PDF de verificación generado.");
     return;
@@ -141,6 +137,11 @@ VentaCreateViewModel Carrito(
         DineroRecibido = recibido,
         Detalles = [new() { IdProducto = producto, Cantidad = cantidad }]
     };
+
+if (!nombre.StartsWith("MiCholoPruebas_") || nombre.Length != 47)
+{
+    throw new Exception("Nombre de base de prueba inesperado.");
+}
 
 try
 {
@@ -832,11 +833,6 @@ try
 }
 finally
 {
-    if (!nombre.StartsWith("MiCholoPruebas_") || nombre.Length != 47)
-    {
-        throw new Exception("Nombre de base de prueba inesperado.");
-    }
-
     if (!prepararWeb)
     {
         await using var limpieza = Db();
@@ -869,4 +865,16 @@ namespace MiCholoMVC.Pruebas.Soporte
         public string WebRootPath { get; set; } = "";
         public IFileProvider WebRootFileProvider { get; set; } = new NullFileProvider();
     }
+
+    internal static class DatosPrueba
+    {
+        internal static readonly string[] PdfDetalleFijo =
+        [
+            "Producto: Leche descremada presentación familiar de larga duración",
+            "Lote: L-2026-001 | Motivo: VENCIMIENTO",
+            "Cantidad: 2 | Costo unitario: S/ 2.00 | Valor perdido: S/ 4.00",
+            " "
+        ];
+    }
+
 }
