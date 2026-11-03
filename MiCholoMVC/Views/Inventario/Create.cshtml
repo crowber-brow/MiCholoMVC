@@ -1,4 +1,4 @@
-﻿@model MiCholoMVC.Models.MovimientoInventario
+@model MiCholoMVC.Models.MovimientoInventario
 
 @{
     ViewData["Title"] = "Nuevo Movimiento";
@@ -12,20 +12,17 @@
 
         <div class="card-body">
 
-            <form asp-action="Create"
-                  method="post">
+            <form asp-action="Create" method="post">
 
-                <div asp-validation-summary="ModelOnly"
-                     class="text-danger mb-3">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3">
                 </div>
 
                 <div class="mb-3">
 
                     <label asp-for="IdProducto"
+                           for="productoSelect"
                            class="form-label">
-
                         Producto
-
                     </label>
 
                     <select asp-for="IdProducto"
@@ -39,8 +36,7 @@
 
                     </select>
 
-                    <span asp-validation-for="IdProducto"
-                          class="text-danger">
+                    <span asp-validation-for="IdProducto" class="text-danger">
                     </span>
 
                 </div>
@@ -48,10 +44,9 @@
                 <div class="mb-3">
 
                     <label asp-for="IdLote"
+                           for="loteSelect"
                            class="form-label">
-
                         Lote
-
                     </label>
 
                     <select asp-for="IdLote"
@@ -64,8 +59,7 @@
 
                     </select>
 
-                    <span asp-validation-for="IdLote"
-                          class="text-danger">
+                    <span asp-validation-for="IdLote" class="text-danger">
                     </span>
 
                     <small class="text-muted">
@@ -76,15 +70,11 @@
 
                 <div class="mb-3">
 
-                    <label asp-for="Tipo"
-                           class="form-label">
-
+                    <label asp-for="Tipo" class="form-label">
                         Tipo de movimiento
-
                     </label>
 
-                    <select asp-for="Tipo"
-                            class="form-select">
+                    <select asp-for="Tipo" class="form-select">
 
                         <option value="">
                             -- Seleccione --
@@ -100,19 +90,15 @@
 
                     </select>
 
-                    <span asp-validation-for="Tipo"
-                          class="text-danger">
+                    <span asp-validation-for="Tipo" class="text-danger">
                     </span>
 
                 </div>
 
                 <div class="mb-3">
 
-                    <label asp-for="Cantidad"
-                           class="form-label">
-
+                    <label asp-for="Cantidad" class="form-label">
                         Cantidad
-
                     </label>
 
                     <input asp-for="Cantidad"
@@ -120,43 +106,30 @@
                            min="1"
                            class="form-control" />
 
-                    <span asp-validation-for="Cantidad"
-                          class="text-danger">
+                    <span asp-validation-for="Cantidad" class="text-danger">
                     </span>
 
                 </div>
 
                 <div class="mb-3">
 
-                    <label asp-for="Descripcion"
-                           class="form-label">
-
+                    <label asp-for="Descripcion" class="form-label">
                         Descripción
-
                     </label>
 
-                    <textarea asp-for="Descripcion"
-                              class="form-control">
-                    </textarea>
+                    <textarea asp-for="Descripcion" class="form-control"></textarea>
 
-                    <span asp-validation-for="Descripcion"
-                          class="text-danger">
+                    <span asp-validation-for="Descripcion" class="text-danger">
                     </span>
 
                 </div>
 
-                <button type="submit"
-                        class="btn btn-success">
-
+                <button type="submit" class="btn btn-success">
                     Registrar movimiento
-
                 </button>
 
-                <a asp-action="Index"
-                   class="btn btn-secondary">
-
+                <a asp-action="Index" class="btn btn-secondary">
                     Cancelar
-
                 </a>
 
             </form>
@@ -170,8 +143,7 @@
 @section Scripts {
 
     @{
-        await Html.RenderPartialAsync(
-            "_ValidationScriptsPartial");
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
 
     <script>
@@ -193,7 +165,7 @@
                 }
 
                 const response = await fetch(
-                    `/Inventario/ObtenerLotesPorProducto?idProducto=${productoId}`
+                    `/Inventario/ObtenerLotesPorProducto?idProducto=${encodeURIComponent(productoId)}`
                 );
 
                 if (!response.ok) {
