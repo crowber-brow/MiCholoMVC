@@ -1,8 +1,136 @@
+
 @model IEnumerable<MiCholoMVC.Models.Perdida>
-@{ViewData["Title"]="Control de pérdidas";}
-<div class="d-flex justify-content-between mb-3"><h2>Control de pérdidas</h2><a asp-action="Create" class="btn btn-primary">Registrar pérdida</a></div>
-@if(TempData["Mensaje"]!=null){<div class="alert alert-success">@TempData["Mensaje"]</div>}
-<form class="row g-2 mb-3"><div class="col-md-3"><label>Producto</label><select name="idProducto" asp-items="ViewBag.Productos" class="form-select"><option value="">Todos</option></select></div><div class="col-md-3"><label>Motivo</label><select name="motivo" class="form-select"><option value="">Todos</option>@foreach(var m in MiCholoMVC.Services.ReglasNegocio.MotivosPerdida){<option value="@m" selected="@(ViewBag.Motivo==m)">@m</option>}</select></div><div class="col-md-2"><label>Desde</label><input type="date" name="desde" value="@(((DateTime?)ViewBag.Desde)?.ToString("yyyy-MM-dd"))" class="form-control"/></div><div class="col-md-2"><label>Hasta</label><input type="date" name="hasta" value="@(((DateTime?)ViewBag.Hasta)?.ToString("yyyy-MM-dd"))" class="form-control"/></div><div class="col-md-2 align-self-end"><button class="btn btn-primary">Filtrar</button></div></form>
-<div class="row mb-3"><div class="col"><div class="card p-3">Registros<strong>@Model.Count()</strong></div></div><div class="col"><div class="card p-3">Unidades perdidas<strong>@Model.Sum(p=>p.Cantidad)</strong></div></div><div class="col"><div class="card p-3">Valor económico<strong>S/ @Model.Sum(p=>p.ValorTotal).ToString("F2")</strong></div></div></div>
-<div class="card p-3 table-responsive"><table class="table table-striped"><thead><tr><th>Fecha</th><th>Producto</th><th>Lote</th><th>Cantidad</th><th>Motivo</th><th>Valor unitario</th><th>Valor total</th><th>Justificación</th></tr></thead><tbody>@foreach(var p in Model){<tr><td>@p.Fecha.ToString("dd/MM/yyyy HH:mm")</td><td>@p.Lote?.Producto?.Nombre</td><td>@p.Lote?.NumeroLote</td><td>@p.Cantidad</td><td>@p.Motivo</td><td>S/ @p.ValorUnitario.ToString("F2")</td><td>S/ @p.ValorTotal.ToString("F2")</td><td>@p.Justificacion</td></tr>}</tbody></table>@if(!Model.Any()){<p>No hay pérdidas para estos filtros.</p>}</div>
-<div class="row mt-3"><div class="col-md-6"><h4>Por producto</h4>@foreach(var g in Model.GroupBy(p=>p.Lote?.Producto?.Nombre)){<p>@g.Key: @g.Sum(p=>p.Cantidad) unidades · S/ @g.Sum(p=>p.ValorTotal).ToString("F2")</p>}</div><div class="col-md-6"><h4>Por motivo</h4>@foreach(var g in Model.GroupBy(p=>p.Motivo)){<p>@g.Key: @g.Sum(p=>p.Cantidad) unidades · S/ @g.Sum(p=>p.ValorTotal).ToString("F2")</p>}</div></div>
+
+@{
+    ViewData["Title"] = "Control de pérdidas";
+}
+
+<div class="d-flex justify-content-between mb-3">
+    <h2>Control de pérdidas</h2>
+    <a asp-action="Create" class="btn btn-primary">Registrar pérdida</a>
+</div>
+
+@if (TempData["Mensaje"] != null)
+{
+    <div class="alert alert-success">@TempData["Mensaje"]</div>
+}
+
+<form class="row g-2 mb-3">
+    <div class="col-md-3">
+        <label for="idProducto" class="form-label">Producto</label>
+        <select id="idProducto" name="idProducto" asp-items="ViewBag.Productos" class="form-select">
+            <option value="">Todos</option>
+        </select>
+    </div>
+
+    <div class="col-md-3">
+        <label for="motivo" class="form-label">Motivo</label>
+        <select id="motivo" name="motivo" class="form-select">
+            <option value="">Todos</option>
+            @foreach (var m in MiCholoMVC.Services.ReglasNegocio.MotivosPerdida)
+            {
+                <option value="@m" selected="@(ViewBag.Motivo == m)">@m</option>
+            }
+        </select>
+    </div>
+
+    <div class="col-md-2">
+        <label for="desde" class="form-label">Desde</label>
+        <input
+            type="date"
+            id="desde"
+            name="desde"
+            value="@(((DateTime?)ViewBag.Desde)?.ToString("yyyy-MM-dd"))"
+            class="form-control" />
+    </div>
+
+    <div class="col-md-2">
+        <label for="hasta" class="form-label">Hasta</label>
+        <input
+            type="date"
+            id="hasta"
+            name="hasta"
+            value="@(((DateTime?)ViewBag.Hasta)?.ToString("yyyy-MM-dd"))"
+            class="form-control" />
+    </div>
+
+    <div class="col-md-2 align-self-end">
+        <button type="submit" class="btn btn-primary">Filtrar</button>
+    </div>
+</form>
+
+<div class="row mb-3">
+    <div class="col">
+        <div class="card p-3">
+            Registros
+            <strong>@Model.Count()</strong>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card p-3">
+            Unidades perdidas
+            <strong>@Model.Sum(p => p.Cantidad)</strong>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card p-3">
+            Valor económico
+            <strong>S/ @Model.Sum(p => p.ValorTotal).ToString("F2")</strong>
+        </div>
+    </div>
+</div>
+
+<div class="card p-3 table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Producto</th>
+                <th>Lote</th>
+                <th>Cantidad</th>
+                <th>Motivo</th>
+                <th>Valor unitario</th>
+                <th>Valor total</th>
+                <th>Justificación</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var p in Model)
+            {
+                <tr>
+                    <td>@p.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@p.Lote?.Producto?.Nombre</td>
+                    <td>@p.Lote?.NumeroLote</td>
+                    <td>@p.Cantidad</td>
+                    <td>@p.Motivo</td>
+                    <td>S/ @p.ValorUnitario.ToString("F2")</td>
+                    <td>S/ @p.ValorTotal.ToString("F2")</td>
+                    <td>@p.Justificacion</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @if (!Model.Any())
+    {
+        <p>No hay pérdidas para estos filtros.</p>
+    }
+</div>
+
+<div class="row mt-3">
+    <div class="col-md-6">
+        <h4>Por producto</h4>
+        @foreach (var g in Model.GroupBy(p => p.Lote?.Producto?.Nombre))
+        {
+            <p>@g.Key: @g.Sum(p => p.Cantidad) unidades · S/ @g.Sum(p => p.ValorTotal).ToString("F2")</p>
+        }
+    </div>
+
+    <div class="col-md-6">
+        <h4>Por motivo</h4>
+        @foreach (var g in Model.GroupBy(p => p.Motivo))
+        {
+            <p>@g.Key: @g.Sum(p => p.Cantidad) unidades · S/ @g.Sum(p => p.ValorTotal).ToString("F2")</p>
+        }
+    </div>
+</div>
