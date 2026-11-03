@@ -1,3 +1,4 @@
+
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -7,10 +8,11 @@ using Microsoft.EntityFrameworkCore;
 using MiCholoMVC.Data;
 using MiCholoMVC.Repositories;
 using MiCholoMVC.Services;
+
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
-
 var builder = WebApplication.CreateBuilder(args);
+
 builder.Services.AddScoped<OperacionService>();
 builder.Services.AddSingleton<AccesoService>();
 
@@ -56,13 +58,19 @@ builder.Services
         options.SlidingExpiration = true;
         options.Cookie.HttpOnly = true;
         options.Cookie.SameSite = SameSiteMode.Lax;
+
         options.Events.OnValidatePrincipal = async context =>
         {
-            var acceso = context.HttpContext.RequestServices.GetRequiredService<AccesoService>();
-            if (context.Principal?.FindFirst("VersionCredencial")?.Value != acceso.VersionCredencial())
+            var acceso = context.HttpContext.RequestServices
+                .GetRequiredService<AccesoService>();
+
+            if (context.Principal?.FindFirst("VersionCredencial")?.Value
+                != acceso.VersionCredencial())
             {
                 context.RejectPrincipal();
-                await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+                await context.HttpContext.SignOutAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme);
             }
         };
     });
@@ -90,18 +98,21 @@ app.MapControllerRoute(
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
+
     try
     {
         var context = services.GetRequiredService<MiCholoDbContext>();
-        context.Database.Migrate();
+
+        await context.Database.MigrateAsync();
     }
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Ocurrió un error al aplicar las migraciones en la base de datos.");
+
+        logger.LogError(
+            ex,
+            "Ocurrió un error al aplicar las migraciones en la base de datos.");
     }
 }
 
-app.Run();
-
-app.Run();
+await app.RunAsync();
