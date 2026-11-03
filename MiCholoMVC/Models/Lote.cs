@@ -1,4 +1,3 @@
-
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
@@ -7,6 +6,8 @@ namespace MiCholoMVC.Models
     public class Lote
     {
         [Key]
+        [Required]
+        [JsonRequired]
         public int IdLote { get; set; }
 
         [Required]
