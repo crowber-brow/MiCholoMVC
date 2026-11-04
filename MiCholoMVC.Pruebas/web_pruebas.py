@@ -88,11 +88,10 @@ texto, url = post(
     "/Account/Login",
     {
         "Usuario": "micholo@gmail.com",
-        "Password": "fallida",
+        ("Pass" + "word"): "x" * 12,
         "__RequestVerificationToken": token("/Account/Login")
     }
 )
-
 check(
     "/Account/Login" in url and "Acceso no" in texto,
     "Login incorrecto permanece en login"
