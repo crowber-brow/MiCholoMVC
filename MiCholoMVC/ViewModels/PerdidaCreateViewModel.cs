@@ -1,10 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations;
+
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace MiCholoMVC.ViewModels
 {
     public class PerdidaCreateViewModel
     {
         [Required(ErrorMessage = "Seleccione un producto.")]
+        [JsonRequired]
         public int IdProducto { get; set; }
 
         [Required(ErrorMessage = "Seleccione un lote.")]
@@ -12,6 +15,7 @@ namespace MiCholoMVC.ViewModels
 
         [Required(ErrorMessage = "Ingrese la cantidad.")]
         [Range(1, int.MaxValue, ErrorMessage = "La cantidad debe ser mayor que 0.")]
+        [JsonRequired]
         public int Cantidad { get; set; }
 
         [Required(ErrorMessage = "Seleccione un motivo.")]
