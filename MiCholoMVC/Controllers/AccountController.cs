@@ -67,7 +67,7 @@ namespace MiCholoMVC.Controllers
                 principal,
                 new AuthenticationProperties
                 {
-                    IsPersistent = model.Recordarme,
+                    IsPersistent = model.Recordarme == true
                     ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
                 });
 
