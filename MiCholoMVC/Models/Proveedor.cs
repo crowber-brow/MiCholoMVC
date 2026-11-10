@@ -1,10 +1,14 @@
-﻿using System.ComponentModel.DataAnnotations;
+
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace MiCholoMVC.Models
 {
     public class Proveedor
     {
         [Key]
+        [Required]
+        [JsonRequired]
         public int IdProveedor { get; set; }
 
         [Required]
