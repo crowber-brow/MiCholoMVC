@@ -11,30 +11,43 @@ on:
 
 jobs:
   build:
-    name: Build and analyze
+    name: Build, test and analyze
     runs-on: windows-latest
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: 21
           distribution: zulu
 
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
       - name: Install SonarScanner for .NET
         shell: powershell
         run: dotnet tool update dotnet-sonarscanner --global
 
-      - name: Build and analyze
+      - name: Begin SonarCloud analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         shell: powershell
         run: |
-          dotnet sonarscanner begin /k:"crowber-brow_MiCholoMVC" /o:"crowber-brow" /d:sonar.token="$env:SONAR_TOKEN"
-          dotnet build MiCholoMVC.slnx
-          dotnet sonarscanner end /d:sonar.token="$env:SONAR_TOKEN"
+          dotnet sonarscanner begin /k:"crowber-brow_MiCholoMVC" /o:"crowber-brow" /d:sonar.token="$env:SONAR_TOKEN" /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml"
+
+      - name: Build solution
+        shell: powershell
+        run: dotnet build MiCholoMVC.slnx --no-incremental
+
+      - name: Run automated tests and collect coverage
+        shell: powershell
+        run: |
+          dotnet test MiCholoMVC.Pruebas/MiCholoMVC.Pruebas.csproj --no-build --logger "console;verbosity=normal" /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput="./TestResults/coverage/"
+
+      - name: End SonarCloud analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        shell: powershell
+        run: dotnet sonarscanner end /d:sonar.token="$env:SONAR_TOKEN"
