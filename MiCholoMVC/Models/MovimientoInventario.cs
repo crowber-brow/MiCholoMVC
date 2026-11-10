@@ -7,6 +7,8 @@ namespace MiCholoMVC.Models
     public class MovimientoInventario
     {
         [Key]
+        [Required]
+        [JsonRequired]
         public int IdMovimiento { get; set; }
 
         [Required]
