@@ -7,6 +7,8 @@ namespace MiCholoMVC.Models
     public class Categoria
     {
         [Key]
+        [Required]
+        [JsonRequired]
         public int IdCategoria { get; set; }
 
         [Required]
