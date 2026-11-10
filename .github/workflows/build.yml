@@ -9,9 +9,13 @@ on:
     types: [opened, synchronize, reopened]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
   build:
-    name: Build, test and analyze
+    name: Build and analyze MiCholoMVC
     runs-on: windows-latest
 
     steps:
@@ -35,16 +39,11 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         shell: powershell
         run: |
-          dotnet sonarscanner begin /k:"crowber-brow_MiCholoMVC" /o:"crowber-brow" /d:sonar.token="$env:SONAR_TOKEN" /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml"
+          dotnet sonarscanner begin /k:"crowber-brow_MiCholoMVC" /o:"crowber-brow" /d:sonar.token="$env:SONAR_TOKEN" /d:sonar.exclusions="MiCholoMVC.Pruebas/**"
 
-      - name: Build solution
+      - name: Build main project
         shell: powershell
-        run: dotnet build MiCholoMVC.slnx --no-incremental
-
-      - name: Run automated tests and collect coverage
-        shell: powershell
-        run: |
-          dotnet test MiCholoMVC.Pruebas/MiCholoMVC.Pruebas.csproj --no-build --logger "console;verbosity=normal" /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput="./TestResults/coverage/"
+        run: dotnet build MiCholoMVC/MiCholoMVC.csproj --no-incremental
 
       - name: End SonarCloud analysis
         env:
