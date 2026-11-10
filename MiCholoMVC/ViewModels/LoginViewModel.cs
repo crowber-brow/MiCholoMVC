@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+
+using System.ComponentModel.DataAnnotations;
 
 namespace MiCholoMVC.ViewModels
 {
@@ -14,6 +15,6 @@ namespace MiCholoMVC.ViewModels
         [StringLength(128)]
         public string Password { get; set; } = string.Empty;
 
-        public bool Recordarme { get; set; }
+        public bool? Recordarme { get; set; }
     }
 }
