@@ -8,6 +8,8 @@ namespace MiCholoMVC.Models
     public class Producto
     {
         [Key]
+        [Required]
+        [JsonRequired]
         public int IdProducto { get; set; }
 
         [Required]
